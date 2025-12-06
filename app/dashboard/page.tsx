@@ -7,10 +7,11 @@ import LogoutButton from '@/components/LogoutButton'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch all persons
+  // Fetch all persons (increase limit from default 1000)
   const { data: persons, error: personsError } = await supabase
     .from('persons')
     .select('*')
+    .limit(5000)
 
   if (personsError) {
     console.error('Dashboard data fetch error:', personsError)
