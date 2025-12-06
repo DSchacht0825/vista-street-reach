@@ -26,7 +26,7 @@ export async function isAdmin(): Promise<boolean> {
     }
 
     const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
@@ -57,7 +57,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
   }
 
   const { data: profile } = await supabase
-    .from('user_profiles')
+    .from('users')
     .select('*')
     .eq('id', user.id)
     .single()
