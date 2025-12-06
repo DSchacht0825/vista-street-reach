@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   encounterFormSchema,
   type EncounterFormData,
-  MAT_TYPES,
   CO_OCCURRING_TYPES,
   PLACEMENT_LOCATIONS,
 } from '@/lib/schemas/encounter-schema'
@@ -42,9 +41,6 @@ export default function ServiceInteractionForm({
     defaultValues: {
       service_date: new Date().toISOString().split('T')[0],
       co_occurring_mh_sud: false,
-      mat_referral: false,
-      detox_referral: false,
-      harm_reduction_education: false,
       transportation_provided: false,
       shower_trailer: false,
       placement_made: false,
@@ -55,8 +51,6 @@ export default function ServiceInteractionForm({
 
   // Watch conditional fields
   const coOccurring = watch('co_occurring_mh_sud')
-  const matReferral = watch('mat_referral')
-  const detoxReferral = watch('detox_referral')
   const placementMade = watch('placement_made')
   const placementLocation = watch('placement_location')
 
@@ -91,6 +85,7 @@ export default function ServiceInteractionForm({
     const supabase = createClient()
 
     try {
+      // Insert the encounter
       const { error } = await supabase.from('encounters').insert([
         {
           person_id: personId,
@@ -104,13 +99,6 @@ export default function ServiceInteractionForm({
           cultural_notes: data.cultural_notes || null,
           co_occurring_mh_sud: data.co_occurring_mh_sud,
           co_occurring_type: data.co_occurring_type || null,
-          mat_referral: data.mat_referral,
-          mat_type: data.mat_type || null,
-          mat_provider: data.mat_provider || null,
-          detox_referral: data.detox_referral,
-          detox_provider: data.detox_provider || null,
-          fentanyl_test_strips_count: data.fentanyl_test_strips_count || null,
-          harm_reduction_education: data.harm_reduction_education,
           transportation_provided: data.transportation_provided,
           shower_trailer: data.shower_trailer,
           other_services: data.other_services || null,
@@ -124,6 +112,38 @@ export default function ServiceInteractionForm({
       ])
 
       if (error) throw error
+
+      // Update the person's last_contact and increment contact_count
+      const { error: updateError } = await supabase.rpc('increment_contact', {
+        person_id: personId,
+        contact_date: data.service_date,
+      })
+
+      // If RPC doesn't exist, fall back to manual update
+      if (updateError) {
+        // Get current contact_count
+        const { data: personData } = await supabase
+          .from('persons')
+          .select('contact_count, last_contact')
+          .eq('id', personId)
+          .single()
+
+        const currentCount = personData?.contact_count || 0
+        const currentLastContact = personData?.last_contact
+
+        // Only update last_contact if new date is more recent
+        const newLastContact = !currentLastContact || data.service_date > currentLastContact
+          ? data.service_date
+          : currentLastContact
+
+        await supabase
+          .from('persons')
+          .update({
+            contact_count: currentCount + 1,
+            last_contact: newLastContact,
+          })
+          .eq('id', personId)
+      }
 
       // Success! Navigate back to client profile
       router.push(`/client/${personId}`)
@@ -181,7 +201,7 @@ export default function ServiceInteractionForm({
 
           {gpsError && !isManuallySet && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <p className="text-red-700 font-medium">❌ {gpsError}</p>
+              <p className="text-red-700 font-medium">{gpsError}</p>
               <div className="flex gap-2 mt-3">
                 <button
                   type="button"
@@ -203,7 +223,7 @@ export default function ServiceInteractionForm({
 
           {isManuallySet && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-blue-700 font-medium">📍 Location set manually from map</p>
+              <p className="text-blue-700 font-medium">Location set manually from map</p>
               <p className="text-sm text-blue-600 mt-1">
                 Coordinates: {currentLatitude!.toFixed(6)}, {currentLongitude!.toFixed(6)}
               </p>
@@ -231,10 +251,10 @@ export default function ServiceInteractionForm({
 
           {latitude !== null && longitude !== null && !isManuallySet && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-medium">✓ Location captured successfully (Auto GPS)</p>
+              <p className="text-green-700 font-medium">Location captured successfully (Auto GPS)</p>
               <p className="text-sm text-green-600 mt-1">
                 Coordinates: {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                {accuracy && ` (±${Math.round(accuracy)}m)`}
+                {accuracy && ` (${Math.round(accuracy)}m)`}
               </p>
               <div className="flex gap-2 mt-3">
                 <button
@@ -340,9 +360,9 @@ export default function ServiceInteractionForm({
         </div>
       </div>
 
-      {/* Clinical/Treatment Section */}
+      {/* Mental Health Section */}
       <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Clinical & Treatment Referrals</h2>
+        <h2 className="text-xl font-semibold mb-4">Mental Health</h2>
         <div className="space-y-4">
           {/* Co-occurring */}
           <div>
@@ -375,115 +395,12 @@ export default function ServiceInteractionForm({
               </div>
             )}
           </div>
-
-          {/* MAT Referral */}
-          <div>
-            <div className="flex items-center mb-2">
-              <input
-                {...register('mat_referral')}
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                MAT (Medication-Assisted Treatment) Referral
-              </label>
-            </div>
-            {matReferral && (
-              <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    MAT Type
-                  </label>
-                  <select
-                    {...register('mat_type')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select type...</option>
-                    {MAT_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Provider Name
-                  </label>
-                  <input
-                    {...register('mat_provider')}
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Detox Referral */}
-          <div>
-            <div className="flex items-center mb-2">
-              <input
-                {...register('detox_referral')}
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                Detox Referral
-              </label>
-            </div>
-            {detoxReferral && (
-              <div className="ml-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Detox Facility/Provider
-                </label>
-                <input
-                  {...register('detox_provider')}
-                  type="text"
-                  placeholder="Where referred"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Harm Reduction Section */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Harm Reduction Services</h2>
-        <div className="space-y-4">
-          {/* Fentanyl Test Strips */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fentanyl Test Strips Provided (quantity)
-            </label>
-            <input
-              {...register('fentanyl_test_strips_count', { valueAsNumber: true })}
-              type="number"
-              min="0"
-              placeholder="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Harm Reduction Education */}
-          <div className="flex items-center">
-            <input
-              {...register('harm_reduction_education')}
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label className="ml-2 block text-sm text-gray-700">
-              Harm Reduction Education Provided
-            </label>
-          </div>
         </div>
       </div>
 
       {/* Other Services Section */}
       <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Other Services Provided</h2>
+        <h2 className="text-xl font-semibold mb-4">Services Provided</h2>
         <div className="space-y-4">
           <div className="flex items-center">
             <input
@@ -509,7 +426,7 @@ export default function ServiceInteractionForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Other Services (IDs, birth certificates, etc.)
+              Other Services (IDs, birth certificates, food, clothing, etc.)
             </label>
             <textarea
               {...register('other_services')}
@@ -584,7 +501,7 @@ export default function ServiceInteractionForm({
                 className="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded"
               />
               <span className="text-sm font-semibold text-red-900">
-                🚫 Refused Shelter
+                Refused Shelter
               </span>
             </label>
           </div>
@@ -606,7 +523,7 @@ export default function ServiceInteractionForm({
               className="h-5 w-5 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
             />
             <span className="text-sm font-semibold text-yellow-900">
-              ⚠️ High Utilizer Contact
+              High Utilizer Contact
             </span>
           </label>
           <p className="text-xs text-gray-500 mt-1 ml-1">
@@ -620,9 +537,6 @@ export default function ServiceInteractionForm({
           placeholder="Progress notes, follow-up needed, client goals, barriers, successes..."
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-sm text-gray-500 mt-2">
-          These notes will be added to the client&apos;s Individual Service Plan (ISP)
-        </p>
       </div>
 
       {/* Submit Button */}

@@ -15,18 +15,9 @@ export const encounterFormSchema = z.object({
   language_preference: z.string().optional().nullable(),
   cultural_notes: z.string().optional().nullable(),
 
-  // Clinical/Treatment
+  // Co-occurring (mental health)
   co_occurring_mh_sud: z.boolean(),
   co_occurring_type: z.string().optional().nullable(),
-  mat_referral: z.boolean(),
-  mat_type: z.string().optional().nullable(),
-  mat_provider: z.string().optional().nullable(),
-  detox_referral: z.boolean(),
-  detox_provider: z.string().optional().nullable(),
-
-  // Harm Reduction
-  fentanyl_test_strips_count: z.number().int().min(0).optional().nullable(),
-  harm_reduction_education: z.boolean(),
 
   // Other Services
   transportation_provided: z.boolean(),
@@ -46,14 +37,6 @@ export const encounterFormSchema = z.object({
 
 export type EncounterFormData = z.infer<typeof encounterFormSchema>
 
-// MAT (Medication-Assisted Treatment) types
-export const MAT_TYPES = [
-  'Methadone',
-  'Buprenorphine (Suboxone)',
-  'Naltrexone (Vivitrol)',
-  'Other',
-] as const
-
 // Co-occurring condition types
 export const CO_OCCURRING_TYPES = [
   'Substance Use + Depression',
@@ -68,7 +51,6 @@ export const CO_OCCURRING_TYPES = [
 // Placement locations
 export const PLACEMENT_LOCATIONS = [
   'BCNC',
-  'Detox',
   'La Posada',
   'Vista',
   'Victory Outreach',
