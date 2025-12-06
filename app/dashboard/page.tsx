@@ -7,15 +7,31 @@ import LogoutButton from '@/components/LogoutButton'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch all persons (increase limit from default 1000)
-  const { data: persons, error: personsError } = await supabase
-    .from('persons')
-    .select('*')
-    .limit(5000)
+  // Fetch all persons with pagination to bypass 1000 row limit
+  let allPersonsData: Record<string, unknown>[] = []
+  let from = 0
+  const pageSize = 1000
 
-  if (personsError) {
-    console.error('Dashboard data fetch error:', personsError)
+  while (true) {
+    const { data, error } = await supabase
+      .from('persons')
+      .select('*')
+      .range(from, from + pageSize - 1)
+
+    if (error) {
+      console.error('Dashboard data fetch error:', error)
+      break
+    }
+
+    if (!data || data.length === 0) break
+    allPersonsData = allPersonsData.concat(data)
+    from += pageSize
+
+    // Safety limit to prevent infinite loops
+    if (from > 50000) break
   }
+
+  const persons = allPersonsData
 
   // Type assertion for Vista-specific person data
   type PersonData = {

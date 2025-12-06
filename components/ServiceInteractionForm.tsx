@@ -114,7 +114,8 @@ export default function ServiceInteractionForm({
       if (error) throw error
 
       // Update the person's last_contact and increment contact_count
-      const { error: updateError } = await supabase.rpc('increment_contact', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase.rpc as any)('increment_contact', {
         person_id: personId,
         contact_date: data.service_date,
       })
@@ -126,7 +127,7 @@ export default function ServiceInteractionForm({
           .from('persons')
           .select('contact_count, last_contact')
           .eq('id', personId)
-          .single()
+          .single() as { data: { contact_count: number; last_contact: string | null } | null }
 
         const currentCount = personData?.contact_count || 0
         const currentLastContact = personData?.last_contact
@@ -141,7 +142,7 @@ export default function ServiceInteractionForm({
           .update({
             contact_count: currentCount + 1,
             last_contact: newLastContact,
-          })
+          } as never)
           .eq('id', personId)
       }
 

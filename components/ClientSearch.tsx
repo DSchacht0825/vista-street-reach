@@ -114,37 +114,50 @@ export default function ClientSearch() {
     const supabase = createClient()
 
     try {
-      // Get all persons with their most recent encounter
-      const { data: persons, error } = await supabase
-        .from('persons')
-        .select(`
-          id,
-          client_id,
-          first_name,
-          middle_name,
-          last_name,
-          nickname,
-          aka,
-          age,
-          date_of_birth,
-          gender,
-          ethnicity,
-          last_contact,
-          contact_count,
-          exit_date,
-          exit_destination,
-          notes,
-          encounters (
-            service_date,
-            outreach_location
-          )
-        `)
-        .order('last_contact', { ascending: false, nullsFirst: false })
+      // Get all persons with pagination to bypass 1000 row limit
+      let allPersonsData: Record<string, unknown>[] = []
+      let from = 0
+      const pageSize = 1000
 
-      if (error) throw error
+      while (true) {
+        const { data, error } = await supabase
+          .from('persons')
+          .select(`
+            id,
+            client_id,
+            first_name,
+            middle_name,
+            last_name,
+            nickname,
+            aka,
+            age,
+            date_of_birth,
+            gender,
+            ethnicity,
+            last_contact,
+            contact_count,
+            exit_date,
+            exit_destination,
+            notes,
+            encounters (
+              service_date,
+              outreach_location
+            )
+          `)
+          .order('last_contact', { ascending: false, nullsFirst: false })
+          .range(from, from + pageSize - 1)
 
-      // Process the data to include only the most recent encounter
-      const processedPersons = persons?.map((person: {
+        if (error) throw error
+        if (!data || data.length === 0) break
+        allPersonsData = allPersonsData.concat(data)
+        from += pageSize
+
+        // Safety limit
+        if (from > 50000) break
+      }
+
+      // Type definition for person data with encounters
+      type PersonWithEncounters = {
         id: string
         client_id: string
         first_name: string
@@ -162,7 +175,12 @@ export default function ClientSearch() {
         exit_destination?: string | null
         notes?: string | null
         encounters?: Array<{ service_date: string; outreach_location: string }>
-      }) => ({
+      }
+
+      const persons = allPersonsData as PersonWithEncounters[]
+
+      // Process the data to include only the most recent encounter
+      const processedPersons = persons?.map((person) => ({
         ...person,
         last_encounter: person.encounters && person.encounters.length > 0
           ? person.encounters.sort((a, b) =>
