@@ -30,25 +30,36 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
     notFound()
   }
 
-  // Type assertion for person data (all fields from persons table)
+  // Type assertion for person data (all fields from persons table - Vista specific)
   const person = data as {
     id: string
-    client_id: string
+    client_id?: string | null
     first_name: string
-    last_name: string
+    middle_name?: string | null
+    last_name?: string | null
     nickname?: string | null
+    aka?: string | null
     photo_url?: string | null
-    date_of_birth: string
-    gender: string
-    race: string
-    ethnicity: string
-    living_situation: string
+    date_of_birth?: string | null
+    age?: number | null
+    gender?: string | null
+    race?: string | null
+    ethnicity?: string | null
+    height?: string | null
+    weight?: string | null
+    hair_color?: string | null
+    eye_color?: string | null
+    physical_description?: string | null
+    notes?: string | null
+    living_situation?: string | null
     length_of_time_homeless?: string | null
     veteran_status: boolean
     chronic_homeless: boolean
     enrollment_date: string
     case_manager?: string | null
     referral_source?: string | null
+    last_contact?: string | null
+    contact_count?: number | null
     exit_date?: string | null
     exit_destination?: string | null
     exit_notes?: string | null
@@ -86,7 +97,14 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
   }
 
   const allEncounters = (encounterData || []) as EncounterData[]
-  const age = calculateAge(person.date_of_birth)
+
+  // Use stored age or calculate from DOB if available
+  const age = person.age || (person.date_of_birth ? calculateAge(person.date_of_birth) : null)
+
+  // Check if client is active (contacted within last 90 days)
+  const isActive = person.last_contact
+    ? (new Date().getTime() - new Date(person.last_contact).getTime()) / (1000 * 60 * 60 * 24) <= 90
+    : false
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,9 +177,17 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
                   </span>
                 )}
               </h2>
-              <p className="text-gray-600 mt-1">
-                Client ID: {person.client_id}
-              </p>
+              {person.aka && (
+                <p className="text-gray-500 text-sm">AKA: {person.aka}</p>
+              )}
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  {isActive ? 'Active' : 'Inactive'}
+                </span>
+                {person.client_id && (
+                  <span className="text-gray-500 text-sm">ID: {person.client_id}</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex gap-3">
@@ -202,71 +228,114 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4">Demographics</h3>
             <dl className="space-y-2 text-sm">
-              <div>
-                <dt className="text-gray-600">Age</dt>
-                <dd className="font-medium">{age} years old</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Date of Birth</dt>
-                <dd className="font-medium">{format(new Date(person.date_of_birth), 'MM/dd/yyyy')}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Gender</dt>
-                <dd className="font-medium">{person.gender}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Race</dt>
-                <dd className="font-medium">{person.race}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Ethnicity</dt>
-                <dd className="font-medium">{person.ethnicity}</dd>
-              </div>
+              {age && (
+                <div>
+                  <dt className="text-gray-600">Age</dt>
+                  <dd className="font-medium">{age} years old</dd>
+                </div>
+              )}
+              {person.date_of_birth && (
+                <div>
+                  <dt className="text-gray-600">Date of Birth</dt>
+                  <dd className="font-medium">{format(new Date(person.date_of_birth), 'MM/dd/yyyy')}</dd>
+                </div>
+              )}
+              {person.gender && (
+                <div>
+                  <dt className="text-gray-600">Gender</dt>
+                  <dd className="font-medium">{person.gender}</dd>
+                </div>
+              )}
+              {person.ethnicity && (
+                <div>
+                  <dt className="text-gray-600">Ethnicity</dt>
+                  <dd className="font-medium">{person.ethnicity}</dd>
+                </div>
+              )}
             </dl>
           </div>
 
-          {/* Status */}
+          {/* Physical Description */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Status</h3>
+            <h3 className="text-lg font-semibold mb-4">Physical Description</h3>
+            <dl className="space-y-2 text-sm">
+              {person.height && (
+                <div>
+                  <dt className="text-gray-600">Height</dt>
+                  <dd className="font-medium">{person.height}</dd>
+                </div>
+              )}
+              {person.weight && (
+                <div>
+                  <dt className="text-gray-600">Weight</dt>
+                  <dd className="font-medium">{person.weight}</dd>
+                </div>
+              )}
+              {person.hair_color && (
+                <div>
+                  <dt className="text-gray-600">Hair Color</dt>
+                  <dd className="font-medium">{person.hair_color}</dd>
+                </div>
+              )}
+              {person.eye_color && (
+                <div>
+                  <dt className="text-gray-600">Eye Color</dt>
+                  <dd className="font-medium">{person.eye_color}</dd>
+                </div>
+              )}
+              {person.physical_description && (
+                <div>
+                  <dt className="text-gray-600">Description</dt>
+                  <dd className="font-medium whitespace-pre-wrap">{person.physical_description}</dd>
+                </div>
+              )}
+              {!person.height && !person.weight && !person.hair_color && !person.eye_color && !person.physical_description && (
+                <p className="text-gray-500 italic">No physical description recorded</p>
+              )}
+            </dl>
+          </div>
+
+          {/* Contact History */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Contact History</h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-gray-600">Living Situation</dt>
-                <dd className="font-medium">{person.living_situation}</dd>
+                <dt className="text-gray-600">Total Contacts</dt>
+                <dd className="text-2xl font-bold text-blue-600">{person.contact_count || 0}</dd>
               </div>
               <div>
-                <dt className="text-gray-600">Time Homeless</dt>
-                <dd className="font-medium">{person.length_of_time_homeless || 'Not recorded'}</dd>
+                <dt className="text-gray-600">Last Contact</dt>
+                <dd className="font-medium">
+                  {person.last_contact
+                    ? format(new Date(person.last_contact), 'MMM dd, yyyy')
+                    : 'Never'}
+                </dd>
               </div>
               <div>
-                <dt className="text-gray-600">Enrollment Date</dt>
-                <dd className="font-medium">{format(new Date(person.enrollment_date), 'MM/dd/yyyy')}</dd>
+                <dt className="text-gray-600">First Enrolled</dt>
+                <dd className="font-medium">{format(new Date(person.enrollment_date), 'MMM dd, yyyy')}</dd>
               </div>
-              <div className="flex items-center">
-                {person.veteran_status && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">Veteran</span>}
+              {person.living_situation && person.living_situation !== 'Unknown' && (
+                <div>
+                  <dt className="text-gray-600">Living Situation</dt>
+                  <dd className="font-medium">{person.living_situation}</dd>
+                </div>
+              )}
+              <div className="flex items-center flex-wrap gap-1 pt-2">
+                {person.veteran_status && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Veteran</span>}
                 {person.chronic_homeless && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Chronic</span>}
               </div>
             </dl>
           </div>
-
-          {/* Service Summary */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Service Summary</h3>
-            <dl className="space-y-2 text-sm">
-              <div>
-                <dt className="text-gray-600">Total Interactions</dt>
-                <dd className="text-2xl font-bold text-blue-600">{encounterCount || 0}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Case Manager</dt>
-                <dd className="font-medium">{person.case_manager || 'Not assigned'}</dd>
-              </div>
-              <div>
-                <dt className="text-gray-600">Referral Source</dt>
-                <dd className="font-medium">{person.referral_source || 'Not recorded'}</dd>
-              </div>
-            </dl>
-          </div>
         </div>
+
+        {/* Notes Section */}
+        {person.notes && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4 text-yellow-900">Notes</h3>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{person.notes}</p>
+          </div>
+        )}
 
         {/* Exit Information - Show if client has exited */}
         {person.exit_date && person.exit_notes && (

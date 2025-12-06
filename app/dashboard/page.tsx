@@ -2,272 +2,114 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
-import EncounterHeatMap from '@/components/EncounterHeatMap'
-import ExportButton from '@/components/ExportButton'
-import CustomReportBuilder from '@/components/CustomReportBuilder'
-import DuplicateManager from '@/components/DuplicateManager'
 import LogoutButton from '@/components/LogoutButton'
-import ProgramExitsSection from '@/components/ProgramExitsSection'
-import MetricsGrid from '@/components/MetricsGrid'
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { start_date?: string; end_date?: string }
-}) {
+export default async function DashboardPage() {
   const supabase = await createClient()
-
-  // Parse date range from query params
-  const startDate = searchParams.start_date || null
-  const endDate = searchParams.end_date || null
-
-  // Fetch ALL encounters for CustomReportBuilder (unfiltered)
-  const { data: allEncountersData, error: allEncountersError } = await supabase
-    .from('encounters')
-    .select('*')
-
-  // Build filtered query for dashboard metrics
-  // Use timestamp range that covers the full day in local timezone
-  // Start date: beginning of day (00:00:00)
-  // End date: end of day (23:59:59)
-  let dashboardEncountersQuery = supabase.from('encounters').select('*')
-
-  if (startDate && endDate) {
-    const startTimestamp = `${startDate}T00:00:00`
-    const endTimestamp = `${endDate}T23:59:59`
-    dashboardEncountersQuery = dashboardEncountersQuery
-      .gte('service_date', startTimestamp)
-      .lte('service_date', endTimestamp)
-  }
-
-  const { data: encounters, error: encountersError } = await dashboardEncountersQuery
 
   // Fetch all persons
   const { data: persons, error: personsError } = await supabase
     .from('persons')
     .select('*')
 
-  // Fetch all status changes for reporting
-  const { data: statusChanges, error: statusChangesError } = await supabase
-    .from('status_changes')
-    .select('*')
-
-  if (encountersError || personsError || allEncountersError || statusChangesError) {
-    console.error('Dashboard data fetch error:', encountersError || personsError || allEncountersError || statusChangesError)
+  if (personsError) {
+    console.error('Dashboard data fetch error:', personsError)
   }
 
-  // Type assertions for Supabase data (all fields from database)
-  type EncounterData = {
-    service_date: string
-    person_id: string  // UUID foreign key
-    outreach_location: string
-    latitude: number
-    longitude: number
-    outreach_worker: string
-    language_preference?: string | null
-    co_occurring_mh_sud: boolean
-    co_occurring_type?: string | null
-    mat_referral: boolean
-    mat_type?: string | null
-    mat_provider?: string | null
-    detox_referral: boolean
-    detox_provider?: string | null
-    fentanyl_test_strips_count?: number | null
-    harm_reduction_education: boolean
-    transportation_provided: boolean
-    shower_trailer: boolean
-    other_services?: string | null
-    placement_made?: boolean
-    placement_location?: string | null
-    placement_location_other?: string | null
-    case_management_notes?: string | null
-  }
-
+  // Type assertion for Vista-specific person data
   type PersonData = {
-    id: string  // UUID from database
-    client_id: string
+    id: string
     first_name: string
-    last_name: string
+    middle_name?: string | null
+    last_name?: string | null
     nickname?: string | null
-    phone_number?: string | null
-    date_of_birth: string
-    gender: string
-    race: string
-    ethnicity: string
-    living_situation: string
-    length_of_time_homeless?: string | null
+    aka?: string | null
+    gender?: string | null
+    ethnicity?: string | null
+    age?: number | null
+    height?: string | null
+    weight?: string | null
+    hair_color?: string | null
+    eye_color?: string | null
+    physical_description?: string | null
+    notes?: string | null
+    last_contact?: string | null
+    contact_count?: number | null
+    enrollment_date: string
     veteran_status: boolean
     chronic_homeless: boolean
-    enrollment_date: string
-    case_manager?: string | null
-    referral_source?: string | null
-    income?: string | null
-    income_amount?: number | null
-    exit_date?: string | null
-    exit_destination?: string | null
-    exit_notes?: string | null
   }
 
-  type StatusChangeData = {
-    id: string
-    person_id: string
-    change_type: 'exit' | 'return_to_active'
-    change_date: string
-    exit_destination?: string | null
-    notes?: string | null
-    created_by?: string | null
-    created_at: string
-  }
-
-  const allEncounters = (encounters || []) as EncounterData[]
-  const allEncountersUnfiltered = (allEncountersData || []) as EncounterData[]
   const allPersons = (persons || []) as PersonData[]
-  const allStatusChanges = (statusChanges || []) as StatusChangeData[]
 
-  // Helper function to get local date string (YYYY-MM-DD) from timestamp
-  // This properly handles timezone offsets by parsing the date and extracting local date
-  const getLocalDateString = (dateStr: string): string => {
-    const date = new Date(dateStr)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+  // Calculate 90-day cutoff for active status
+  const ninetyDaysAgo = new Date()
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+  const cutoffDate = ninetyDaysAgo.toISOString().split('T')[0]
 
-  // Get persons who had encounters in the date range (for filtered demographics)
-  const personIdsInRange = new Set(allEncounters.map(e => e.person_id))
-  const personsInRange = startDate && endDate
-    ? allPersons.filter(p => personIdsInRange.has(p.id))
-    : allPersons
+  // Separate active and inactive clients
+  const activeClients = allPersons.filter(p => p.last_contact && p.last_contact >= cutoffDate)
+  const inactiveClients = allPersons.filter(p => !p.last_contact || p.last_contact < cutoffDate)
 
-  // Calculate clients served in date range (unique person_ids from filtered encounters)
-  const clientsServedInRange = personsInRange.length
+  // Calculate total contacts
+  const totalContacts = allPersons.reduce((sum, p) => sum + (p.contact_count || 0), 0)
 
-  // Calculate metrics
-  const metrics = {
-    // 1. Number of unduplicated individuals served (filtered by date range)
-    unduplicatedIndividuals: personsInRange.length,
-
-    // 2. Exits from unsheltered homelessness (detox, shelter, treatment referrals)
-    exitsFromHomelessness: allEncounters.filter(
-      (e) => e.detox_referral || e.mat_referral
-    ).length,
-
-    // 3. Placements made
-    placementsMade: allEncounters.filter((e) => e.placement_made).length,
-
-    // 4. Total MAT/detox referrals
-    matDetoxReferrals: allEncounters.filter(
-      (e) => e.mat_referral || e.detox_referral
-    ).length,
-
-    // 5. Co-occurring SUD and mental health conditions
-    coOccurringConditions: allEncounters.filter((e) => e.co_occurring_mh_sud).length,
-
-    // 6. Shower trailer events (need to add this field - placeholder)
-    showerTrailerEvents: 0, // TODO: Add shower_trailer field tracking
-
-    // 7. Total service interactions
-    totalInteractions: allEncounters.length,
-
-    // 8. Fentanyl test strips distributed
-    fentanylTestStrips: allEncounters.reduce(
-      (sum, e) => sum + (e.fentanyl_test_strips_count || 0),
-      0
-    ),
-
-    // 9. Transportation provided count
-    transportationProvided: allEncounters.filter((e) => e.transportation_provided)
-      .length,
-  }
-
-  // Demographics breakdown - use personsInRange for date-filtered stats
+  // Demographics breakdown
   const demographics = {
-    byGender: personsInRange.reduce((acc, p) => {
-      acc[p.gender] = (acc[p.gender] || 0) + 1
+    byGender: allPersons.reduce((acc, p) => {
+      const gender = p.gender || 'Unknown'
+      acc[gender] = (acc[gender] || 0) + 1
       return acc
     }, {} as Record<string, number>),
-    byRace: personsInRange.reduce((acc, p) => {
-      acc[p.race] = (acc[p.race] || 0) + 1
+    byEthnicity: allPersons.reduce((acc, p) => {
+      const ethnicity = p.ethnicity || 'Unknown'
+      acc[ethnicity] = (acc[ethnicity] || 0) + 1
       return acc
     }, {} as Record<string, number>),
-    veterans: personsInRange.filter((p) => p.veteran_status).length,
-    chronicallyHomeless: personsInRange.filter((p) => p.chronic_homeless).length,
-    withPhoneNumber: personsInRange.filter((p) => p.phone_number).length,
-    withIncome: personsInRange.filter((p) => p.income_amount && p.income_amount > 0).length,
-    averageIncome: personsInRange.filter((p) => p.income_amount && p.income_amount > 0).length > 0
-      ? Math.round(personsInRange.reduce((sum, p) => sum + (p.income_amount || 0), 0) /
-          personsInRange.filter((p) => p.income_amount && p.income_amount > 0).length)
-      : 0,
-    totalIncome: personsInRange.reduce((sum, p) => sum + (p.income_amount || 0), 0),
-  }
-
-  // Program exits breakdown - filter by date range if specified
-  const exitedPersons = allPersons.filter((p) => {
-    if (!p.exit_date) return false
-    if (startDate && endDate) {
-      const exitDateStr = getLocalDateString(p.exit_date)
-      return exitDateStr >= startDate && exitDateStr <= endDate
-    }
-    return true // No date filter, show all exits
-  })
-  const exitMetrics = {
-    totalExits: exitedPersons.length,
-    byDestination: exitedPersons.reduce((acc, p) => {
-      if (p.exit_destination) {
-        acc[p.exit_destination] = (acc[p.exit_destination] || 0) + 1
+    byHairColor: allPersons.reduce((acc, p) => {
+      if (p.hair_color) {
+        acc[p.hair_color] = (acc[p.hair_color] || 0) + 1
       }
       return acc
     }, {} as Record<string, number>),
+    veterans: allPersons.filter(p => p.veteran_status).length,
+    chronicallyHomeless: allPersons.filter(p => p.chronic_homeless).length,
+    withNotes: allPersons.filter(p => p.notes).length,
   }
 
-  // Service interaction types
-  const serviceTypes = {
-    caseManagement: allEncounters.filter((e) => e.case_management_notes).length,
-    harmReduction: allEncounters.filter((e) => e.harm_reduction_education).length,
-    matReferrals: allEncounters.filter((e) => e.mat_referral).length,
-    detoxReferrals: allEncounters.filter((e) => e.detox_referral).length,
-    transportation: allEncounters.filter((e) => e.transportation_provided).length,
-    showerTrailer: allEncounters.filter((e) => e.shower_trailer).length,
-  }
+  // Age breakdown
+  const ageGroups = allPersons.reduce((acc, p) => {
+    if (!p.age) {
+      acc['Unknown'] = (acc['Unknown'] || 0) + 1
+    } else if (p.age < 25) {
+      acc['Under 25'] = (acc['Under 25'] || 0) + 1
+    } else if (p.age < 35) {
+      acc['25-34'] = (acc['25-34'] || 0) + 1
+    } else if (p.age < 45) {
+      acc['35-44'] = (acc['35-44'] || 0) + 1
+    } else if (p.age < 55) {
+      acc['45-54'] = (acc['45-54'] || 0) + 1
+    } else if (p.age < 65) {
+      acc['55-64'] = (acc['55-64'] || 0) + 1
+    } else {
+      acc['65+'] = (acc['65+'] || 0) + 1
+    }
+    return acc
+  }, {} as Record<string, number>)
 
-  // Referral breakdown by provider
-  const referralBreakdown = {
-    mat: allEncounters
-      .filter(e => e.mat_referral && e.mat_provider)
-      .reduce((acc, e) => {
-        const provider = e.mat_provider || 'Unknown'
-        acc[provider] = (acc[provider] || 0) + 1
-        return acc
-      }, {} as Record<string, number>),
-    detox: allEncounters
-      .filter(e => e.detox_referral && e.detox_provider)
-      .reduce((acc, e) => {
-        const provider = e.detox_provider || 'Unknown'
-        acc[provider] = (acc[provider] || 0) + 1
-        return acc
-      }, {} as Record<string, number>),
-  }
+  // Recently contacted (last 30 days)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const thirtyDayCutoff = thirtyDaysAgo.toISOString().split('T')[0]
+  const recentlyContacted = allPersons.filter(p => p.last_contact && p.last_contact >= thirtyDayCutoff)
 
-  // Placement breakdown by location
-  const placementBreakdown = allEncounters
-    .filter(e => e.placement_made)
-    .reduce((acc, e) => {
-      const location = e.placement_location === 'Other'
-        ? (e.placement_location_other || 'Other')
-        : (e.placement_location || 'Unknown')
-      acc[location] = (acc[location] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+  // Never contacted
+  const neverContacted = allPersons.filter(p => !p.last_contact || p.contact_count === 0)
 
-  // GPS coordinates for heat map
-  const encounterLocations = allEncounters
-    .filter((e) => e.latitude && e.longitude)
-    .map((e) => ({
-      latitude: e.latitude,
-      longitude: e.longitude,
-      date: e.service_date,
-    }))
+  // Average contacts per client
+  const avgContacts = allPersons.length > 0
+    ? Math.round(totalContacts / allPersons.length * 10) / 10
+    : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -324,7 +166,7 @@ export default async function DashboardPage({
               Admin Dashboard
             </h2>
             <p className="text-gray-600 mt-1">
-              Program metrics and service analytics
+              Client overview and program analytics
             </p>
           </div>
           <div>
@@ -350,56 +192,7 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        {/* Date Range Filter */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Custom Date Range</h3>
-          <form method="GET" action="/dashboard" className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                name="start_date"
-                defaultValue={startDate || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                name="end_date"
-                defaultValue={endDate || ''}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Apply Filter
-            </button>
-            {(startDate || endDate) && (
-              <Link
-                href="/dashboard"
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Clear
-              </Link>
-            )}
-          </form>
-          {startDate && endDate && (
-            <p className="text-sm text-gray-600 mt-3">
-              Showing data from {format(new Date(startDate), 'MMM dd, yyyy')} to{' '}
-              {format(new Date(endDate), 'MMM dd, yyyy')}
-            </p>
-          )}
-        </div>
-
-        {/* Custom Reports Summary - Highlighted Section */}
+        {/* Key Metrics Summary */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 mb-6 border-2 border-blue-200">
           <div className="flex items-center mb-4">
             <svg
@@ -416,284 +209,239 @@ export default async function DashboardPage({
               />
             </svg>
             <h3 className="text-xl font-bold text-gray-900">
-              Custom Reports Summary
-              {startDate && endDate && (
-                <span className="text-sm font-normal text-gray-600 ml-2">
-                  ({format(new Date(startDate), 'MMM dd, yyyy')} - {format(new Date(endDate), 'MMM dd, yyyy')})
-                </span>
-              )}
+              Program Summary
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Clients Served</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">{clientsServedInRange}</p>
-              <p className="text-xs text-gray-500 mt-1">Unduplicated individuals</p>
+              <p className="text-sm text-gray-600 font-medium">Total Clients</p>
+              <p className="text-3xl font-bold text-blue-600 mt-1">{allPersons.length}</p>
+              <p className="text-xs text-gray-500 mt-1">In the system</p>
             </div>
 
             <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Service Interactions</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{metrics.totalInteractions}</p>
-              <p className="text-xs text-gray-500 mt-1">Total encounters</p>
+              <p className="text-sm text-gray-600 font-medium">Active Clients</p>
+              <p className="text-3xl font-bold text-green-600 mt-1">{activeClients.length}</p>
+              <p className="text-xs text-gray-500 mt-1">Contacted in last 90 days</p>
             </div>
 
             <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Program Exits</p>
-              <p className="text-3xl font-bold text-teal-600 mt-1">{exitMetrics.totalExits}</p>
-              <p className="text-xs text-gray-500 mt-1">Clients exited from program</p>
+              <p className="text-sm text-gray-600 font-medium">Inactive Clients</p>
+              <p className="text-3xl font-bold text-orange-600 mt-1">{inactiveClients.length}</p>
+              <p className="text-xs text-gray-500 mt-1">No contact in 90+ days</p>
             </div>
 
             <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Fentanyl Test Strips</p>
-              <p className="text-3xl font-bold text-yellow-600 mt-1">{metrics.fentanylTestStrips}</p>
-              <p className="text-xs text-gray-500 mt-1">Total distributed</p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Total Referrals</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">{metrics.matDetoxReferrals}</p>
-              <p className="text-xs text-gray-500 mt-1">MAT & Detox combined</p>
+              <p className="text-sm text-gray-600 font-medium">Total Contacts</p>
+              <p className="text-3xl font-bold text-purple-600 mt-1">{totalContacts.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">All-time interactions</p>
             </div>
           </div>
         </div>
 
-        {/* Referral Breakdown Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Referral Breakdown by Provider</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-md font-medium text-purple-700 mb-3">MAT Referrals</h4>
-              {Object.keys(referralBreakdown.mat).length > 0 ? (
-                <dl className="space-y-2">
-                  {Object.entries(referralBreakdown.mat)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([provider, count]) => (
-                      <div key={provider} className="flex justify-between items-center bg-purple-50 px-3 py-2 rounded">
-                        <dt className="text-gray-700">{provider}</dt>
-                        <dd className="font-semibold text-purple-600">{count}</dd>
-                      </div>
-                    ))}
-                </dl>
-              ) : (
-                <p className="text-gray-500 text-sm italic">No MAT referrals in this period</p>
-              )}
-            </div>
-
-            <div>
-              <h4 className="text-md font-medium text-red-700 mb-3">Detox Referrals</h4>
-              {Object.keys(referralBreakdown.detox).length > 0 ? (
-                <dl className="space-y-2">
-                  {Object.entries(referralBreakdown.detox)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([provider, count]) => (
-                      <div key={provider} className="flex justify-between items-center bg-red-50 px-3 py-2 rounded">
-                        <dt className="text-gray-700">{provider}</dt>
-                        <dd className="font-semibold text-red-600">{count}</dd>
-                      </div>
-                    ))}
-                </dl>
-              ) : (
-                <p className="text-gray-500 text-sm italic">No detox referrals in this period</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Placement Breakdown Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Placements by Location
-          </h3>
-          <div className="mb-4">
-            <p className="text-3xl font-bold text-green-600">{metrics.placementsMade}</p>
-            <p className="text-sm text-gray-500">Total placements in this period</p>
-          </div>
-          {Object.keys(placementBreakdown).length > 0 ? (
-            <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(placementBreakdown)
-                .sort(([, a], [, b]) => b - a)
-                .map(([location, count]) => (
-                  <div key={location} className="flex justify-between items-center bg-green-50 px-4 py-3 rounded-lg">
-                    <dt className="text-gray-700 font-medium">{location}</dt>
-                    <dd className="font-bold text-green-600 text-lg">{count}</dd>
-                  </div>
-                ))}
-            </dl>
-          ) : (
-            <p className="text-gray-500 text-sm italic">No placements recorded in this period</p>
-          )}
-        </div>
-
-        {/* Custom Report Builder */}
-        <div className="mb-6">
-          <CustomReportBuilder persons={allPersons} encounters={allEncountersUnfiltered} statusChanges={allStatusChanges} />
-        </div>
-
-        {/* Duplicate Manager */}
-        <div className="mb-6">
-          <DuplicateManager persons={allPersons} />
-        </div>
-
-        {/* Key Metrics Grid - Clickable Cards */}
-        <MetricsGrid
-          metrics={metrics}
-          persons={personsInRange}
-          encounters={allEncounters}
-          demographics={demographics}
-        />
-
-        {/* Demographics Section */}
+        {/* Contact Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Gender Distribution</h3>
-            <dl className="space-y-2">
-              {Object.entries(demographics.byGender).map(([gender, count]) => (
-                <div key={gender} className="flex justify-between">
-                  <dt className="text-gray-600">{gender}</dt>
-                  <dd className="font-medium">{count}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Race/Ethnicity Distribution</h3>
-            <dl className="space-y-2">
-              {Object.entries(demographics.byRace).map(([race, count]) => (
-                <div key={race} className="flex justify-between">
-                  <dt className="text-gray-600">{race}</dt>
-                  <dd className="font-medium">{count}</dd>
-                </div>
-              ))}
-            </dl>
+            <h3 className="text-lg font-semibold mb-4">Contact Activity</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">
+                  {recentlyContacted.length}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Contacted Last 30 Days</p>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <p className="text-2xl font-bold text-red-600">
+                  {neverContacted.length}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Never Contacted</p>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">
+                  {avgContacts}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Avg Contacts/Client</p>
+              </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <p className="text-2xl font-bold text-yellow-600">
+                  {demographics.withNotes}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Clients with Notes</p>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4">Special Populations</h3>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-gray-600">Veterans</dt>
-                <dd className="font-medium">{demographics.veterans}</dd>
+            <dl className="space-y-3">
+              <div className="flex justify-between items-center bg-blue-50 px-4 py-3 rounded-lg">
+                <dt className="text-gray-700 font-medium">Veterans</dt>
+                <dd className="font-bold text-blue-600 text-xl">{demographics.veterans}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-gray-600">Chronically Homeless</dt>
-                <dd className="font-medium">{demographics.chronicallyHomeless}</dd>
+              <div className="flex justify-between items-center bg-red-50 px-4 py-3 rounded-lg">
+                <dt className="text-gray-700 font-medium">Chronically Homeless</dt>
+                <dd className="font-bold text-red-600 text-xl">{demographics.chronicallyHomeless}</dd>
               </div>
             </dl>
           </div>
         </div>
 
-        {/* Program Exits Section */}
-        <ProgramExitsSection
-          totalExits={exitMetrics.totalExits}
-          exitsByDestination={exitMetrics.byDestination}
-        />
+        {/* Demographics Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Gender Distribution</h3>
+            <dl className="space-y-2">
+              {Object.entries(demographics.byGender)
+                .sort(([, a], [, b]) => b - a)
+                .map(([gender, count]) => (
+                  <div key={gender} className="flex justify-between items-center">
+                    <dt className="text-gray-600">{gender}</dt>
+                    <dd className="font-medium">{count} <span className="text-gray-400 text-sm">({Math.round(count / allPersons.length * 100)}%)</span></dd>
+                  </div>
+                ))}
+            </dl>
+          </div>
 
-        {/* Contact & Economic Data */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Contact & Economic Data</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-emerald-50 rounded-lg">
-              <p className="text-2xl font-bold text-emerald-600">
-                {demographics.withPhoneNumber}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Clients with Phone</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {Math.round((demographics.withPhoneNumber / allPersons.length) * 100)}% of total
-              </p>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Ethnicity Distribution</h3>
+            <dl className="space-y-2">
+              {Object.entries(demographics.byEthnicity)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 8)
+                .map(([ethnicity, count]) => (
+                  <div key={ethnicity} className="flex justify-between items-center">
+                    <dt className="text-gray-600">{ethnicity}</dt>
+                    <dd className="font-medium">{count} <span className="text-gray-400 text-sm">({Math.round(count / allPersons.length * 100)}%)</span></dd>
+                  </div>
+                ))}
+            </dl>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4">Age Distribution</h3>
+            <dl className="space-y-2">
+              {['Under 25', '25-34', '35-44', '45-54', '55-64', '65+', 'Unknown']
+                .filter(group => ageGroups[group])
+                .map((group) => (
+                  <div key={group} className="flex justify-between items-center">
+                    <dt className="text-gray-600">{group}</dt>
+                    <dd className="font-medium">{ageGroups[group]} <span className="text-gray-400 text-sm">({Math.round((ageGroups[group] || 0) / allPersons.length * 100)}%)</span></dd>
+                  </div>
+                ))}
+            </dl>
+          </div>
+        </div>
+
+        {/* Hair Color Distribution */}
+        {Object.keys(demographics.byHairColor).length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Hair Color Distribution</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {Object.entries(demographics.byHairColor)
+                .sort(([, a], [, b]) => b - a)
+                .map(([color, count]) => (
+                  <div key={color} className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-lg font-bold text-gray-700">{count}</p>
+                    <p className="text-sm text-gray-600">{color}</p>
+                  </div>
+                ))}
             </div>
-            <div className="text-center p-4 bg-cyan-50 rounded-lg">
-              <p className="text-2xl font-bold text-cyan-600">
-                {demographics.withIncome}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Reporting Income</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {Math.round((demographics.withIncome / allPersons.length) * 100)}% of total
-              </p>
+          </div>
+        )}
+
+        {/* Active/Inactive Client Lists */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Recently Active */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+              Recently Active Clients
+              <span className="ml-2 text-sm font-normal text-gray-500">({recentlyContacted.length})</span>
+            </h3>
+            <div className="max-h-64 overflow-y-auto">
+              {recentlyContacted.length > 0 ? (
+                <ul className="space-y-2">
+                  {recentlyContacted
+                    .sort((a, b) => new Date(b.last_contact!).getTime() - new Date(a.last_contact!).getTime())
+                    .slice(0, 10)
+                    .map((person) => (
+                      <li key={person.id} className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <Link href={`/client/${person.id}`} className="text-blue-600 hover:underline">
+                          {person.first_name} {person.last_name}
+                        </Link>
+                        <span className="text-sm text-gray-500">
+                          {person.last_contact && format(new Date(person.last_contact), 'MMM dd')}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 italic">No recent contacts</p>
+              )}
             </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                ${demographics.averageIncome.toLocaleString()}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Average Monthly Income</p>
-              <p className="text-xs text-gray-500 mt-1">Among those reporting</p>
-            </div>
-            <div className="text-center p-4 bg-violet-50 rounded-lg">
-              <p className="text-2xl font-bold text-violet-600">
-                ${demographics.totalIncome.toLocaleString()}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Total Monthly Income</p>
-              <p className="text-xs text-gray-500 mt-1">All clients combined</p>
+          </div>
+
+          {/* Needs Outreach */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+              Needs Outreach (Inactive 90+ days)
+              <span className="ml-2 text-sm font-normal text-gray-500">({inactiveClients.length})</span>
+            </h3>
+            <div className="max-h-64 overflow-y-auto">
+              {inactiveClients.length > 0 ? (
+                <ul className="space-y-2">
+                  {inactiveClients
+                    .sort((a, b) => {
+                      if (!a.last_contact) return -1
+                      if (!b.last_contact) return 1
+                      return new Date(a.last_contact).getTime() - new Date(b.last_contact).getTime()
+                    })
+                    .slice(0, 10)
+                    .map((person) => (
+                      <li key={person.id} className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <Link href={`/client/${person.id}`} className="text-blue-600 hover:underline">
+                          {person.first_name} {person.last_name}
+                        </Link>
+                        <span className="text-sm text-gray-500">
+                          {person.last_contact
+                            ? format(new Date(person.last_contact), 'MMM dd, yyyy')
+                            : 'Never'}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 italic">All clients are active</p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Service Types Breakdown */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Service Interaction Types</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                {serviceTypes.caseManagement}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Case Management</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">
-                {serviceTypes.harmReduction}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Harm Reduction</p>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <p className="text-2xl font-bold text-purple-600">
-                {serviceTypes.matReferrals}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">MAT Referrals</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <p className="text-2xl font-bold text-red-600">
-                {serviceTypes.detoxReferrals}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Detox Referrals</p>
-            </div>
-            <div className="text-center p-4 bg-indigo-50 rounded-lg">
-              <p className="text-2xl font-bold text-indigo-600">
-                {serviceTypes.transportation}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Transportation</p>
-            </div>
-            <div className="text-center p-4 bg-teal-50 rounded-lg">
-              <p className="text-2xl font-bold text-teal-600">
-                {serviceTypes.showerTrailer}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">Shower Trailer</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Heat Map */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Service Interaction Heat Map</h3>
-          <EncounterHeatMap locations={encounterLocations} />
-        </div>
-
-        {/* Export Button */}
+        {/* Data Export */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Export Data</h3>
-          <p className="text-gray-600 mb-4">
-            Download all metrics and data for the selected date range. Exports three CSV files:
-            summary metrics, client list, and service interactions.
-          </p>
-          <ExportButton
-            persons={allPersons}
-            encounters={allEncounters}
-            startDate={startDate}
-            endDate={endDate}
-          />
+          <h3 className="text-lg font-semibold mb-4">Data Summary</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-700">{allPersons.length}</p>
+              <p className="text-sm text-gray-600">Total Clients</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-700">{totalContacts.toLocaleString()}</p>
+              <p className="text-sm text-gray-600">Total Contacts</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-700">
+                {Math.round(activeClients.length / allPersons.length * 100)}%
+              </p>
+              <p className="text-sm text-gray-600">Active Rate</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-700">{avgContacts}</p>
+              <p className="text-sm text-gray-600">Avg Contacts</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
