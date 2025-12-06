@@ -25,3 +25,4 @@ export default withPWA({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
 })(nextConfig);
+// Force rebuild Fri Dec  5 16:47:05 PST 2025
