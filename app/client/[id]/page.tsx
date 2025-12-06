@@ -16,14 +16,15 @@ function calculateAge(dob: string): number {
   return age
 }
 
-export default async function ClientProfilePage({ params }: { params: { id: string } }) {
+export default async function ClientProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Fetch person details
   const { data, error } = await supabase
     .from('persons')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !data) {
@@ -74,7 +75,7 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
     const { data, error: encError } = await supabase
       .from('encounters')
       .select('*')
-      .eq('person_id', params.id)
+      .eq('person_id', id)
       .order('service_date', { ascending: false })
       .range(from, from + pageSize - 1)
 
@@ -213,7 +214,7 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
           <div className="flex gap-3">
             {!person.exit_date && (
               <Link
-                href={`/client/${params.id}/encounter/new`}
+                href={`/client/${id}/encounter/new`}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center"
               >
                 <svg

@@ -14,23 +14,27 @@ export interface Database {
           id: string
           client_id: string
           first_name: string
-          last_name: string
+          last_name: string | null
+          middle_name: string | null
           nickname: string | null
-          date_of_birth: string
-          gender: string
-          race: string
-          ethnicity: string
+          aka: string | null
+          date_of_birth: string | null
+          gender: string | null
+          race: string | null
+          ethnicity: string | null
           veteran_status: boolean
           disability_status: boolean
           disability_type: string | null
           chronic_homeless: boolean
-          living_situation: string
+          living_situation: string | null
           length_of_time_homeless: string | null
-          enrollment_date: string
+          enrollment_date: string | null
           case_manager: string | null
           referral_source: string | null
           preferred_language: string | null
           cultural_lived_experience: string | null
+          contact_count: number
+          last_contact: string | null
           created_at: string
           updated_at: string
         }
@@ -38,23 +42,27 @@ export interface Database {
           id?: string
           client_id?: string
           first_name: string
-          last_name: string
+          last_name?: string | null
+          middle_name?: string | null
           nickname?: string | null
-          date_of_birth: string
-          gender: string
-          race: string
-          ethnicity: string
-          veteran_status: boolean
-          disability_status: boolean
+          aka?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          race?: string | null
+          ethnicity?: string | null
+          veteran_status?: boolean
+          disability_status?: boolean
           disability_type?: string | null
-          chronic_homeless: boolean
-          living_situation: string
+          chronic_homeless?: boolean
+          living_situation?: string | null
           length_of_time_homeless?: string | null
-          enrollment_date: string
+          enrollment_date?: string | null
           case_manager?: string | null
           referral_source?: string | null
           preferred_language?: string | null
           cultural_lived_experience?: string | null
+          contact_count?: number
+          last_contact?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -62,23 +70,27 @@ export interface Database {
           id?: string
           client_id?: string
           first_name?: string
-          last_name?: string
+          last_name?: string | null
+          middle_name?: string | null
           nickname?: string | null
-          date_of_birth?: string
-          gender?: string
-          race?: string
-          ethnicity?: string
+          aka?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          race?: string | null
+          ethnicity?: string | null
           veteran_status?: boolean
           disability_status?: boolean
           disability_type?: string | null
           chronic_homeless?: boolean
-          living_situation?: string
+          living_situation?: string | null
           length_of_time_homeless?: string | null
-          enrollment_date?: string
+          enrollment_date?: string | null
           case_manager?: string | null
           referral_source?: string | null
           preferred_language?: string | null
           cultural_lived_experience?: string | null
+          contact_count?: number
+          last_contact?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -97,18 +109,13 @@ export interface Database {
           cultural_notes: string | null
           co_occurring_mh_sud: boolean
           co_occurring_type: string | null
-          mat_referral: boolean
-          mat_type: string | null
-          mat_provider: string | null
-          detox_referral: boolean
-          detox_provider: string | null
-          naloxone_distributed: boolean
-          naloxone_date: string | null
-          fentanyl_test_strips_count: number | null
-          harm_reduction_education: boolean
           transportation_provided: boolean
           shower_trailer: boolean
           other_services: string | null
+          placement_made: boolean
+          placement_location: string | null
+          placement_location_other: string | null
+          refused_shelter: boolean
           high_utilizer_contact: boolean
           case_management_notes: string | null
           created_at: string
@@ -125,20 +132,15 @@ export interface Database {
           referral_source?: string | null
           language_preference?: string | null
           cultural_notes?: string | null
-          co_occurring_mh_sud: boolean
+          co_occurring_mh_sud?: boolean
           co_occurring_type?: string | null
-          mat_referral: boolean
-          mat_type?: string | null
-          mat_provider?: string | null
-          detox_referral: boolean
-          detox_provider?: string | null
-          naloxone_distributed: boolean
-          naloxone_date?: string | null
-          fentanyl_test_strips_count?: number | null
-          harm_reduction_education: boolean
-          transportation_provided: boolean
-          shower_trailer: boolean
+          transportation_provided?: boolean
+          shower_trailer?: boolean
           other_services?: string | null
+          placement_made?: boolean
+          placement_location?: string | null
+          placement_location_other?: string | null
+          refused_shelter?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           created_at?: string
@@ -157,18 +159,13 @@ export interface Database {
           cultural_notes?: string | null
           co_occurring_mh_sud?: boolean
           co_occurring_type?: string | null
-          mat_referral?: boolean
-          mat_type?: string | null
-          mat_provider?: string | null
-          detox_referral?: boolean
-          detox_provider?: string | null
-          naloxone_distributed?: boolean
-          naloxone_date?: string | null
-          fentanyl_test_strips_count?: number | null
-          harm_reduction_education?: boolean
           transportation_provided?: boolean
           shower_trailer?: boolean
           other_services?: string | null
+          placement_made?: boolean
+          placement_location?: string | null
+          placement_location_other?: string | null
+          refused_shelter?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           created_at?: string

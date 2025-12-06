@@ -11,14 +11,15 @@ type PersonData = {
   client_id: string
 }
 
-export default async function NewEncounterPage({ params }: { params: { id: string } }) {
+export default async function NewEncounterPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
 
   // Fetch the person's details
   const { data, error } = await supabase
     .from('persons')
     .select('id, first_name, last_name, client_id')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !data) {
@@ -59,7 +60,7 @@ export default async function NewEncounterPage({ params }: { params: { id: strin
         {/* Header with back link */}
         <div className="mb-8">
           <Link
-            href={`/client/${params.id}`}
+            href={`/client/${id}`}
             className="text-blue-700 hover:text-blue-800 font-medium mb-4 inline-flex items-center"
           >
             <svg
