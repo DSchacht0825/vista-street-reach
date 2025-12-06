@@ -11,15 +11,23 @@ interface Person {
   first_name: string
   last_name: string
   nickname?: string | null
+  aka?: string | null
   date_of_birth?: string | null
+  age?: number | null
   gender?: string | null
   race?: string | null
   ethnicity?: string | null
+  hair_color?: string | null
+  eye_color?: string | null
+  height?: string | null
+  weight?: string | null
   living_situation?: string | null
   veteran_status?: boolean
   chronic_homeless?: boolean
   enrollment_date?: string | null
   case_manager?: string | null
+  last_contact?: string | null
+  contact_count?: number | null
 }
 
 interface DuplicateGroup {
@@ -309,16 +317,63 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
                               <dd className="font-medium">{person.gender}</dd>
                             </div>
                           )}
+                          {(person.race || person.ethnicity) && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Race/Ethnicity:</dt>
+                              <dd className="font-medium">{[person.race, person.ethnicity].filter(Boolean).join(' / ')}</dd>
+                            </div>
+                          )}
+                          {(person.hair_color || person.eye_color) && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Hair/Eyes:</dt>
+                              <dd className="font-medium">{[person.hair_color, person.eye_color].filter(Boolean).join(' / ')}</dd>
+                            </div>
+                          )}
+                          {(person.height || person.weight) && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Height/Weight:</dt>
+                              <dd className="font-medium">{[person.height, person.weight].filter(Boolean).join(' / ')}</dd>
+                            </div>
+                          )}
+                          {person.aka && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">AKA:</dt>
+                              <dd className="font-medium">{person.aka}</dd>
+                            </div>
+                          )}
+                          {person.living_situation && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Living Situation:</dt>
+                              <dd className="font-medium">{person.living_situation}</dd>
+                            </div>
+                          )}
                           {person.enrollment_date && (
                             <div className="flex justify-between">
                               <dt className="text-gray-600">Enrolled:</dt>
                               <dd className="font-medium">{format(new Date(person.enrollment_date), 'MMM dd, yyyy')}</dd>
                             </div>
                           )}
+                          {person.last_contact && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Last Contact:</dt>
+                              <dd className="font-medium">{format(new Date(person.last_contact), 'MMM dd, yyyy')}</dd>
+                            </div>
+                          )}
                           {person.case_manager && (
                             <div className="flex justify-between">
                               <dt className="text-gray-600">Case Manager:</dt>
                               <dd className="font-medium">{person.case_manager}</dd>
+                            </div>
+                          )}
+                          {(person.veteran_status || person.chronic_homeless) && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Status:</dt>
+                              <dd className="font-medium">
+                                {[
+                                  person.veteran_status ? 'Veteran' : null,
+                                  person.chronic_homeless ? 'Chronic Homeless' : null
+                                ].filter(Boolean).join(', ') || 'N/A'}
+                              </dd>
                             </div>
                           )}
                         </dl>
