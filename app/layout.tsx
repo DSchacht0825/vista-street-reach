@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Encinitas Street Reach",
-  description: "By-name list and service tracking for San Diego Rescue Mission street outreach",
+  title: "Vista Street Reach",
+  description: "By-name list and service tracking for San Diego Rescue Mission Vista outreach",
   manifest: "/manifest.json",
   themeColor: "#1e40af",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Street Reach",
+    title: "Vista Street Reach",
   },
   viewport: {
     width: "device-width",
