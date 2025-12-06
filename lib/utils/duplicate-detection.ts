@@ -34,30 +34,71 @@ export async function checkForDuplicates(
   const supabase = createClient()
 
   try {
-    // Call the database function for fuzzy search
-    const { data, error } = await supabase.rpc(
-      'search_similar_persons',
-      {
-        search_first_name: firstName,
-        search_last_name: lastName,
-        search_dob: dateOfBirth || null,
-        similarity_threshold: threshold,
-      } as never
-    )
+    // Fetch all persons and do client-side fuzzy matching
+    // This is more reliable than RPC and handles missing functions
+    let allPersons: Array<{
+      id: string
+      client_id: string
+      first_name: string
+      last_name: string | null
+      nickname: string | null
+      date_of_birth: string | null
+      last_contact: string | null
+    }> = []
 
-    if (error) {
-      console.error('Error checking for duplicates:', error)
-      return {
-        hasPotentialDuplicates: false,
-        similarPersons: [],
+    let from = 0
+    const pageSize = 1000
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, client_id, first_name, last_name, nickname, date_of_birth, last_contact')
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        console.error('Error fetching persons:', error)
+        break
+      }
+
+      if (!data || data.length === 0) break
+      allPersons = allPersons.concat(data)
+      from += pageSize
+
+      if (from > 50000) break
+    }
+
+    // Find similar persons using fuzzy matching
+    const similarPersons: SimilarPerson[] = []
+
+    for (const person of allPersons) {
+      const firstNameSim = calculateSimilarity(firstName.toLowerCase(), person.first_name.toLowerCase())
+      const lastNameSim = calculateSimilarity(lastName.toLowerCase(), (person.last_name || '').toLowerCase())
+      const avgSimilarity = (firstNameSim + lastNameSim) / 2
+
+      // Check for match: high name similarity OR same DOB with moderate similarity
+      const hasSameDOB = dateOfBirth && person.date_of_birth && dateOfBirth === person.date_of_birth
+      const isMatch = avgSimilarity > 0.7 || (hasSameDOB && avgSimilarity > 0.5)
+
+      if (isMatch) {
+        similarPersons.push({
+          id: person.id,
+          client_id: person.client_id,
+          first_name: person.first_name,
+          last_name: person.last_name || '',
+          nickname: person.nickname,
+          date_of_birth: person.date_of_birth || '',
+          similarity_score: avgSimilarity,
+          last_encounter_date: person.last_contact,
+        })
       }
     }
 
-    const similarPersons = (data || []) as SimilarPerson[]
+    // Sort by similarity score descending
+    similarPersons.sort((a, b) => b.similarity_score - a.similarity_score)
 
     return {
       hasPotentialDuplicates: similarPersons.length > 0,
-      similarPersons,
+      similarPersons: similarPersons.slice(0, 5), // Return top 5 matches
     }
   } catch (error) {
     console.error('Exception checking for duplicates:', error)

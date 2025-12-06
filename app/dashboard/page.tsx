@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import LogoutButton from '@/components/LogoutButton'
+import DuplicateManagerWrapper from '@/components/DuplicateManagerWrapper'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -459,6 +460,11 @@ export default async function DashboardPage() {
               <p className="text-sm text-gray-600">Avg Contacts</p>
             </div>
           </div>
+        </div>
+
+        {/* Duplicate Detection */}
+        <div className="mt-6">
+          <DuplicateManagerWrapper />
         </div>
       </div>
     </div>

@@ -11,14 +11,14 @@ interface Person {
   first_name: string
   last_name: string
   nickname?: string | null
-  date_of_birth: string
-  gender: string
-  race: string
-  ethnicity: string
-  living_situation: string
-  veteran_status: boolean
-  chronic_homeless: boolean
-  enrollment_date: string
+  date_of_birth?: string | null
+  gender?: string | null
+  race?: string | null
+  ethnicity?: string | null
+  living_situation?: string | null
+  veteran_status?: boolean
+  chronic_homeless?: boolean
+  enrollment_date?: string | null
   case_manager?: string | null
 }
 
@@ -75,12 +75,14 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
 
           // Calculate name similarity
           const firstNameSim = calculateSimilarity(person1.first_name, person2.first_name)
-          const lastNameSim = calculateSimilarity(person1.last_name, person2.last_name)
+          const lastNameSim = calculateSimilarity(person1.last_name || '', person2.last_name || '')
           const avgSimilarity = (firstNameSim + lastNameSim) / 2
 
           // Check for exact DOB match or high name similarity
+          const hasSameDOB = person1.date_of_birth && person2.date_of_birth &&
+            person1.date_of_birth === person2.date_of_birth
           const isDuplicate =
-            (person1.date_of_birth === person2.date_of_birth && avgSimilarity > 0.6) ||
+            (hasSameDOB && avgSimilarity > 0.6) ||
             avgSimilarity > 0.85
 
           if (isDuplicate) {
@@ -295,18 +297,24 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
                         </div>
 
                         <dl className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <dt className="text-gray-600">DOB:</dt>
-                            <dd className="font-medium">{format(new Date(person.date_of_birth), 'MMM dd, yyyy')} (Age {calculateAge(person.date_of_birth)})</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-gray-600">Gender:</dt>
-                            <dd className="font-medium">{person.gender}</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-gray-600">Enrolled:</dt>
-                            <dd className="font-medium">{format(new Date(person.enrollment_date), 'MMM dd, yyyy')}</dd>
-                          </div>
+                          {person.date_of_birth && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">DOB:</dt>
+                              <dd className="font-medium">{format(new Date(person.date_of_birth), 'MMM dd, yyyy')} (Age {calculateAge(person.date_of_birth)})</dd>
+                            </div>
+                          )}
+                          {person.gender && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Gender:</dt>
+                              <dd className="font-medium">{person.gender}</dd>
+                            </div>
+                          )}
+                          {person.enrollment_date && (
+                            <div className="flex justify-between">
+                              <dt className="text-gray-600">Enrolled:</dt>
+                              <dd className="font-medium">{format(new Date(person.enrollment_date), 'MMM dd, yyyy')}</dd>
+                            </div>
+                          )}
                           {person.case_manager && (
                             <div className="flex justify-between">
                               <dt className="text-gray-600">Case Manager:</dt>

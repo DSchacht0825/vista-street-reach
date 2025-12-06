@@ -19,7 +19,7 @@ export default function NewClientPage() {
               />
               <div className="border-l-2 border-blue-500 pl-4">
                 <h1 className="text-2xl font-bold text-white">
-                  Encinitas Street Reach
+                  Vista Street Reach
                 </h1>
                 <p className="text-blue-200 text-sm">
                   By-name list & service tracking
