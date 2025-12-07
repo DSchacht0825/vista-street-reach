@@ -524,8 +524,11 @@ export default function DashboardClient({
 
       {/* Heat Map */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">Service Interaction Heat Map</h3>
-        <EncounterHeatMap locations={locations} />
+        <h3 className="text-lg font-semibold mb-4">
+          Service Interaction Heat Map
+          {dateRangeText && <span className="text-sm font-normal text-gray-500 ml-2">({locations.length} locations)</span>}
+        </h3>
+        <EncounterHeatMap key={`map-${initialStartDate}-${initialEndDate}`} locations={locations} />
       </div>
 
       {/* Recently Contacted & Program Exits Lists */}
