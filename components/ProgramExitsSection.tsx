@@ -3,16 +3,34 @@
 import { useState } from 'react'
 import { EXIT_DESTINATIONS } from '@/lib/schemas/exit-schema'
 
+interface Person {
+  id: string
+  first_name: string
+  last_name: string
+  exit_date?: string | null
+  exit_destination?: string | null
+  exit_notes?: string | null
+}
+
 interface ProgramExitsSectionProps {
-  totalExits: number
-  exitsByDestination: Record<string, number>
+  persons: Person[]
 }
 
 export default function ProgramExitsSection({
-  totalExits,
-  exitsByDestination,
+  persons,
 }: ProgramExitsSectionProps) {
   const [showExits, setShowExits] = useState(true)
+
+  // Filter to persons with exits and calculate exit stats
+  const exitedPersons = persons.filter(p => p.exit_date)
+  const totalExits = exitedPersons.length
+
+  // Calculate exits by destination
+  const exitsByDestination = exitedPersons.reduce((acc, p) => {
+    const dest = p.exit_destination || 'Unknown'
+    acc[dest] = (acc[dest] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
 
   // Group destinations by category
   const exitsByCategory = Object.entries(EXIT_DESTINATIONS).reduce((acc, [category, destinations]) => {
@@ -34,6 +52,23 @@ export default function ProgramExitsSection({
 
     return acc
   }, {} as Record<string, { total: number, destinations: Array<{ name: string, count: number }> }>)
+
+  // Add unknown/other exits not in categories
+  const categorizedDestinations: string[] = Object.values(EXIT_DESTINATIONS).flat()
+  const uncategorizedExits = Object.entries(exitsByDestination)
+    .filter(([dest]) => !categorizedDestinations.includes(dest))
+    .reduce((sum, [, count]) => sum + count, 0)
+
+  if (uncategorizedExits > 0) {
+    const uncategorizedDests = Object.entries(exitsByDestination)
+      .filter(([dest]) => !categorizedDestinations.includes(dest))
+      .map(([name, count]) => ({ name, count }))
+
+    exitsByCategory['Other'] = {
+      total: uncategorizedExits,
+      destinations: uncategorizedDests
+    }
+  }
 
   const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
     'Permanent Housing': { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },

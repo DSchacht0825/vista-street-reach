@@ -50,6 +50,7 @@ interface ExportButtonProps {
   encounters: Encounter[]
   startDate?: string | null
   endDate?: string | null
+  dateRange?: string
 }
 
 export default function ExportButton({
@@ -57,6 +58,7 @@ export default function ExportButton({
   encounters,
   startDate,
   endDate,
+  dateRange,
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false)
 

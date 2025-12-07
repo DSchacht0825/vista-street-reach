@@ -30,6 +30,9 @@ interface Encounter {
   detox_provider?: string | null
   fentanyl_test_strips_count?: number | null
   transportation_provided: boolean
+  placement_made?: boolean
+  placement_location?: string | null
+  naloxone_distributed?: boolean
 }
 
 interface MetricsGridProps {
@@ -41,6 +44,7 @@ interface MetricsGridProps {
     fentanylTestStrips: number
     transportationProvided: number
     exitsFromHomelessness: number
+    placementsMade?: number
   }
   persons: Person[]
   encounters: Encounter[]
@@ -58,7 +62,7 @@ export default function MetricsGrid({ metrics, persons, encounters, demographics
     details: `${p.gender} | ${p.race}${p.veteran_status ? ' | Veteran' : ''}${p.chronic_homeless ? ' | Chronically Homeless' : ''}`,
   }))
 
-  const interactionDetails = encounters.map(e => ({
+  const interactionDetails = encounters.slice(0, 100).map(e => ({
     id: e.id || e.person_id + e.service_date,
     name: persons.find(p => p.id === e.person_id)?.first_name + ' ' + persons.find(p => p.id === e.person_id)?.last_name || 'Unknown',
     date: new Date(e.service_date).toLocaleDateString(),
@@ -124,13 +128,30 @@ export default function MetricsGrid({ metrics, persons, encounters, demographics
       location: e.outreach_location,
     }))
 
-  const exitsDetails = encounters
-    .filter(e => e.mat_referral || e.detox_referral)
+  // Placements details
+  const placementDetails = encounters
+    .filter(e => e.placement_made)
     .map(e => ({
       id: e.id || e.person_id + e.service_date,
       name: persons.find(p => p.id === e.person_id)?.first_name + ' ' + persons.find(p => p.id === e.person_id)?.last_name || 'Unknown',
       date: new Date(e.service_date).toLocaleDateString(),
-      details: e.mat_referral ? 'MAT Referral' : 'Detox Referral',
+      details: e.placement_location || 'Location not specified',
+    }))
+
+  // Placement breakdown by location
+  const placementBreakdown: Record<string, number> = {}
+  encounters.filter(e => e.placement_made).forEach(e => {
+    const location = e.placement_location || 'Unknown'
+    placementBreakdown[location] = (placementBreakdown[location] || 0) + 1
+  })
+
+  const exitsDetails = persons
+    .filter(p => p.exit_date)
+    .map(p => ({
+      id: p.id,
+      name: `${p.first_name} ${p.last_name}`,
+      date: p.exit_date ? new Date(p.exit_date).toLocaleDateString() : '',
+      details: p.exit_destination || 'Destination not specified',
     }))
 
   return (
@@ -217,14 +238,28 @@ export default function MetricsGrid({ metrics, persons, encounters, demographics
       />
 
       <MetricCard
-        title="Exits from Homelessness"
+        title="Placements Made"
+        value={metrics.placementsMade || 0}
+        color="green"
+        detailItems={placementDetails}
+        detailTitle="Housing Placements"
+        breakdown={placementBreakdown}
+        icon={
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        }
+      />
+
+      <MetricCard
+        title="Program Exits"
         value={metrics.exitsFromHomelessness}
         color="teal"
         detailItems={exitsDetails}
-        detailTitle="Exits (MAT/Detox Referrals)"
+        detailTitle="Exits from Program"
         icon={
           <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         }
       />

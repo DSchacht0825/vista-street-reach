@@ -4,9 +4,28 @@ import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import LogoutButton from '@/components/LogoutButton'
 import DuplicateManagerWrapper from '@/components/DuplicateManagerWrapper'
+import DashboardClient from './DashboardClient'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ start_date?: string; end_date?: string }>
+}) {
+  const params = await searchParams
   const supabase = await createClient()
+
+  // Get date range from URL params
+  const startDate = params.start_date || ''
+  const endDate = params.end_date || ''
+
+  // Helper function to get local date string from timestamp
+  const getLocalDateString = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
 
   // Fetch all persons with pagination to bypass 1000 row limit
   let allPersonsData: Record<string, unknown>[] = []
@@ -28,92 +47,215 @@ export default async function DashboardPage() {
     allPersonsData = allPersonsData.concat(data)
     from += pageSize
 
-    // Safety limit to prevent infinite loops
     if (from > 50000) break
   }
 
-  const persons = allPersonsData
+  // Fetch all encounters with pagination
+  let allEncountersData: Record<string, unknown>[] = []
+  from = 0
 
-  // Type assertion for Vista-specific person data
+  while (true) {
+    const { data, error } = await supabase
+      .from('encounters')
+      .select('*')
+      .range(from, from + pageSize - 1)
+
+    if (error) {
+      console.error('Encounters fetch error:', error)
+      break
+    }
+
+    if (!data || data.length === 0) break
+    allEncountersData = allEncountersData.concat(data)
+    from += pageSize
+
+    if (from > 100000) break
+  }
+
+  // Fetch status changes for exits/returns
+  let statusChangesData: Record<string, unknown>[] = []
+  const { data: statusData } = await supabase
+    .from('status_changes')
+    .select('*')
+    .order('change_date', { ascending: false })
+
+  if (statusData) {
+    statusChangesData = statusData
+  }
+
+  // Type definitions
   type PersonData = {
     id: string
+    client_id: string
     first_name: string
     middle_name?: string | null
     last_name?: string | null
     nickname?: string | null
     aka?: string | null
     gender?: string | null
+    race?: string | null
     ethnicity?: string | null
     age?: number | null
+    date_of_birth?: string | null
     height?: string | null
     weight?: string | null
     hair_color?: string | null
     eye_color?: string | null
     physical_description?: string | null
+    phone_number?: string | null
     notes?: string | null
     last_contact?: string | null
     contact_count?: number | null
     enrollment_date: string
     veteran_status: boolean
+    disability_status?: boolean
+    disability_type?: string | null
     chronic_homeless: boolean
+    living_situation?: string | null
+    income?: string | null
+    income_amount?: number | null
+    exit_date?: string | null
+    exit_destination?: string | null
+    exit_notes?: string | null
+    sexual_orientation?: string | null
   }
 
-  const allPersons = (persons || []) as PersonData[]
+  type EncounterData = {
+    id: string
+    person_id: string
+    service_date: string
+    outreach_location: string
+    latitude?: number | null
+    longitude?: number | null
+    outreach_worker: string
+    co_occurring_mh_sud: boolean
+    co_occurring_type?: string | null
+    mat_referral: boolean
+    mat_type?: string | null
+    mat_provider?: string | null
+    detox_referral: boolean
+    detox_provider?: string | null
+    fentanyl_test_strips_count?: number | null
+    harm_reduction_education?: boolean
+    transportation_provided: boolean
+    shower_trailer?: boolean
+    placement_made?: boolean
+    placement_location?: string | null
+    placement_location_other?: string | null
+    refused_shelter?: boolean
+    high_utilizer_contact?: boolean
+    case_management_notes?: string | null
+    naloxone_distributed?: boolean
+    naloxone_date?: string | null
+  }
+
+  type StatusChange = {
+    id: string
+    person_id: string
+    change_type: 'exit' | 'return_to_active'
+    change_date: string
+    exit_destination?: string | null
+    notes?: string | null
+    created_by?: string | null
+    created_at: string
+  }
+
+  const allPersons = (allPersonsData || []) as PersonData[]
+  const allEncounters = (allEncountersData || []) as EncounterData[]
+  const statusChanges = (statusChangesData || []) as StatusChange[]
+
+  // Filter encounters by date range if specified
+  let filteredEncounters = allEncounters
+  if (startDate) {
+    filteredEncounters = filteredEncounters.filter(e => {
+      const serviceDate = getLocalDateString(e.service_date)
+      return serviceDate >= startDate
+    })
+  }
+  if (endDate) {
+    filteredEncounters = filteredEncounters.filter(e => {
+      const serviceDate = getLocalDateString(e.service_date)
+      return serviceDate <= endDate
+    })
+  }
+
+  // Get unique person IDs from filtered encounters
+  const uniquePersonIds = new Set(filteredEncounters.map(e => e.person_id))
+  const filteredPersons = startDate || endDate
+    ? allPersons.filter(p => uniquePersonIds.has(p.id))
+    : allPersons
+
+  // Filter persons with exits in date range
+  const personsWithExits = allPersons.filter(p => {
+    if (!p.exit_date) return false
+    if (startDate && p.exit_date < startDate) return false
+    if (endDate && p.exit_date > endDate) return false
+    return true
+  })
 
   // Calculate 90-day cutoff for active status
   const ninetyDaysAgo = new Date()
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
   const cutoffDate = ninetyDaysAgo.toISOString().split('T')[0]
 
-  // Separate active and inactive clients
-  const activeClients = allPersons.filter(p => p.last_contact && p.last_contact >= cutoffDate)
-  const inactiveClients = allPersons.filter(p => !p.last_contact || p.last_contact < cutoffDate)
+  // Separate active and inactive clients (from all clients, not filtered)
+  const activeClients = allPersons.filter(p => p.last_contact && p.last_contact >= cutoffDate && !p.exit_date)
+  const inactiveClients = allPersons.filter(p => (!p.last_contact || p.last_contact < cutoffDate) && !p.exit_date)
+  const exitedClients = allPersons.filter(p => p.exit_date)
 
-  // Calculate total contacts
-  const totalContacts = allPersons.reduce((sum, p) => sum + (p.contact_count || 0), 0)
+  // Calculate metrics
+  const metrics = {
+    unduplicatedIndividuals: filteredPersons.length,
+    totalInteractions: filteredEncounters.length,
+    matDetoxReferrals: filteredEncounters.filter(e => e.mat_referral || e.detox_referral).length,
+    coOccurringConditions: filteredEncounters.filter(e => e.co_occurring_mh_sud).length,
+    fentanylTestStrips: filteredEncounters.reduce((sum, e) => sum + (e.fentanyl_test_strips_count || 0), 0),
+    transportationProvided: filteredEncounters.filter(e => e.transportation_provided).length,
+    exitsFromHomelessness: personsWithExits.length,
+    naloxoneDistributed: filteredEncounters.filter(e => e.naloxone_distributed).length,
+    placementsMade: filteredEncounters.filter(e => e.placement_made).length,
+    showerTrailer: filteredEncounters.filter(e => e.shower_trailer).length,
+    harmReduction: filteredEncounters.filter(e => e.harm_reduction_education).length,
+    caseManagement: filteredEncounters.filter(e => e.case_management_notes).length,
+    refusedShelter: filteredEncounters.filter(e => e.refused_shelter).length,
+    highUtilizer: filteredEncounters.filter(e => e.high_utilizer_contact).length,
+  }
 
   // Demographics breakdown
   const demographics = {
-    byGender: allPersons.reduce((acc, p) => {
+    byGender: filteredPersons.reduce((acc, p) => {
       const gender = p.gender || 'Unknown'
       acc[gender] = (acc[gender] || 0) + 1
       return acc
     }, {} as Record<string, number>),
-    byEthnicity: allPersons.reduce((acc, p) => {
+    byRace: filteredPersons.reduce((acc, p) => {
+      const race = p.race || 'Unknown'
+      acc[race] = (acc[race] || 0) + 1
+      return acc
+    }, {} as Record<string, number>),
+    byEthnicity: filteredPersons.reduce((acc, p) => {
       const ethnicity = p.ethnicity || 'Unknown'
       acc[ethnicity] = (acc[ethnicity] || 0) + 1
       return acc
     }, {} as Record<string, number>),
-    byHairColor: allPersons.reduce((acc, p) => {
-      if (p.hair_color) {
-        acc[p.hair_color] = (acc[p.hair_color] || 0) + 1
-      }
-      return acc
-    }, {} as Record<string, number>),
-    veterans: allPersons.filter(p => p.veteran_status).length,
-    chronicallyHomeless: allPersons.filter(p => p.chronic_homeless).length,
-    withNotes: allPersons.filter(p => p.notes).length,
+    veterans: filteredPersons.filter(p => p.veteran_status).length,
+    chronicallyHomeless: filteredPersons.filter(p => p.chronic_homeless).length,
+    withPhone: filteredPersons.filter(p => p.phone_number).length,
+    withIncome: filteredPersons.filter(p => p.income_amount && p.income_amount > 0).length,
+    totalIncome: filteredPersons.reduce((sum, p) => sum + (p.income_amount || 0), 0),
   }
 
-  // Age breakdown
-  const ageGroups = allPersons.reduce((acc, p) => {
-    if (!p.age) {
-      acc['Unknown'] = (acc['Unknown'] || 0) + 1
-    } else if (p.age < 25) {
-      acc['Under 25'] = (acc['Under 25'] || 0) + 1
-    } else if (p.age < 35) {
-      acc['25-34'] = (acc['25-34'] || 0) + 1
-    } else if (p.age < 45) {
-      acc['35-44'] = (acc['35-44'] || 0) + 1
-    } else if (p.age < 55) {
-      acc['45-54'] = (acc['45-54'] || 0) + 1
-    } else if (p.age < 65) {
-      acc['55-64'] = (acc['55-64'] || 0) + 1
-    } else {
-      acc['65+'] = (acc['65+'] || 0) + 1
-    }
-    return acc
-  }, {} as Record<string, number>)
+  // Locations for heat map - only encounters with GPS data
+  const locations = filteredEncounters
+    .filter(e => e.latitude && e.longitude)
+    .map(e => ({
+      latitude: e.latitude!,
+      longitude: e.longitude!,
+      date: format(new Date(e.service_date), 'MMM dd, yyyy'),
+    }))
+
+  // Total contacts
+  const totalContacts = allPersons.reduce((sum, p) => sum + (p.contact_count || 0), 0)
 
   // Recently contacted (last 30 days)
   const thirtyDaysAgo = new Date()
@@ -121,13 +263,45 @@ export default async function DashboardPage() {
   const thirtyDayCutoff = thirtyDaysAgo.toISOString().split('T')[0]
   const recentlyContacted = allPersons.filter(p => p.last_contact && p.last_contact >= thirtyDayCutoff)
 
-  // Never contacted
-  const neverContacted = allPersons.filter(p => !p.last_contact || p.contact_count === 0)
+  // Build date range display text
+  let dateRangeText = ''
+  if (startDate && endDate) {
+    dateRangeText = `Showing data from ${format(new Date(startDate + 'T00:00:00'), 'MMM dd, yyyy')} to ${format(new Date(endDate + 'T00:00:00'), 'MMM dd, yyyy')}`
+  } else if (startDate) {
+    dateRangeText = `Showing data from ${format(new Date(startDate + 'T00:00:00'), 'MMM dd, yyyy')} onwards`
+  } else if (endDate) {
+    dateRangeText = `Showing data up to ${format(new Date(endDate + 'T00:00:00'), 'MMM dd, yyyy')}`
+  }
 
-  // Average contacts per client
-  const avgContacts = allPersons.length > 0
-    ? Math.round(totalContacts / allPersons.length * 10) / 10
-    : 0
+  // Service interaction types for breakdown
+  const serviceTypes = {
+    caseManagement: filteredEncounters.filter(e => e.case_management_notes).length,
+    harmReduction: filteredEncounters.filter(e => e.harm_reduction_education).length,
+    matReferrals: filteredEncounters.filter(e => e.mat_referral).length,
+    detoxReferrals: filteredEncounters.filter(e => e.detox_referral).length,
+    naloxone: filteredEncounters.filter(e => e.naloxone_distributed).length,
+    transportation: filteredEncounters.filter(e => e.transportation_provided).length,
+    showerTrailer: filteredEncounters.filter(e => e.shower_trailer).length,
+  }
+
+  // Referral breakdowns
+  const matByProvider: Record<string, number> = {}
+  const detoxByProvider: Record<string, number> = {}
+  filteredEncounters.forEach(e => {
+    if (e.mat_referral && e.mat_provider) {
+      matByProvider[e.mat_provider] = (matByProvider[e.mat_provider] || 0) + 1
+    }
+    if (e.detox_referral && e.detox_provider) {
+      detoxByProvider[e.detox_provider] = (detoxByProvider[e.detox_provider] || 0) + 1
+    }
+  })
+
+  // Placements breakdown
+  const placementsByLocation: Record<string, number> = {}
+  filteredEncounters.filter(e => e.placement_made).forEach(e => {
+    const location = e.placement_location || e.placement_location_other || 'Unknown'
+    placementsByLocation[location] = (placementsByLocation[location] || 0) + 1
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -210,257 +384,113 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Key Metrics Summary */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 mb-6 border-2 border-blue-200">
-          <div className="flex items-center mb-4">
-            <svg
-              className="w-6 h-6 text-blue-600 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="text-xl font-bold text-gray-900">
-              Program Summary
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Total Clients</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">{allPersons.length}</p>
-              <p className="text-xs text-gray-500 mt-1">In the system</p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Active Clients</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">{activeClients.length}</p>
-              <p className="text-xs text-gray-500 mt-1">Contacted in last 90 days</p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Inactive Clients</p>
-              <p className="text-3xl font-bold text-orange-600 mt-1">{inactiveClients.length}</p>
-              <p className="text-xs text-gray-500 mt-1">No contact in 90+ days</p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 font-medium">Total Contacts</p>
-              <p className="text-3xl font-bold text-purple-600 mt-1">{totalContacts.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-1">All-time interactions</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Contact Activity</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">
-                  {recentlyContacted.length}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">Contacted Last 30 Days</p>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <p className="text-2xl font-bold text-red-600">
-                  {neverContacted.length}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">Never Contacted</p>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">
-                  {avgContacts}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">Avg Contacts/Client</p>
-              </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <p className="text-2xl font-bold text-yellow-600">
-                  {demographics.withNotes}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">Clients with Notes</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Special Populations</h3>
-            <dl className="space-y-3">
-              <div className="flex justify-between items-center bg-blue-50 px-4 py-3 rounded-lg">
-                <dt className="text-gray-700 font-medium">Veterans</dt>
-                <dd className="font-bold text-blue-600 text-xl">{demographics.veterans}</dd>
-              </div>
-              <div className="flex justify-between items-center bg-red-50 px-4 py-3 rounded-lg">
-                <dt className="text-gray-700 font-medium">Chronically Homeless</dt>
-                <dd className="font-bold text-red-600 text-xl">{demographics.chronicallyHomeless}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-
-        {/* Demographics Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Gender Distribution</h3>
-            <dl className="space-y-2">
-              {Object.entries(demographics.byGender)
-                .sort(([, a], [, b]) => b - a)
-                .map(([gender, count]) => (
-                  <div key={gender} className="flex justify-between items-center">
-                    <dt className="text-gray-600">{gender}</dt>
-                    <dd className="font-medium">{count} <span className="text-gray-400 text-sm">({Math.round(count / allPersons.length * 100)}%)</span></dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Ethnicity Distribution</h3>
-            <dl className="space-y-2">
-              {Object.entries(demographics.byEthnicity)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 8)
-                .map(([ethnicity, count]) => (
-                  <div key={ethnicity} className="flex justify-between items-center">
-                    <dt className="text-gray-600">{ethnicity}</dt>
-                    <dd className="font-medium">{count} <span className="text-gray-400 text-sm">({Math.round(count / allPersons.length * 100)}%)</span></dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Age Distribution</h3>
-            <dl className="space-y-2">
-              {['Under 25', '25-34', '35-44', '45-54', '55-64', '65+', 'Unknown']
-                .filter(group => ageGroups[group])
-                .map((group) => (
-                  <div key={group} className="flex justify-between items-center">
-                    <dt className="text-gray-600">{group}</dt>
-                    <dd className="font-medium">{ageGroups[group]} <span className="text-gray-400 text-sm">({Math.round((ageGroups[group] || 0) / allPersons.length * 100)}%)</span></dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-        </div>
-
-        {/* Hair Color Distribution */}
-        {Object.keys(demographics.byHairColor).length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">Hair Color Distribution</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {Object.entries(demographics.byHairColor)
-                .sort(([, a], [, b]) => b - a)
-                .map(([color, count]) => (
-                  <div key={color} className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-lg font-bold text-gray-700">{count}</p>
-                    <p className="text-sm text-gray-600">{color}</p>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Active/Inactive Client Lists */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Recently Active */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-              Recently Active Clients
-              <span className="ml-2 text-sm font-normal text-gray-500">({recentlyContacted.length})</span>
-            </h3>
-            <div className="max-h-64 overflow-y-auto">
-              {recentlyContacted.length > 0 ? (
-                <ul className="space-y-2">
-                  {recentlyContacted
-                    .sort((a, b) => new Date(b.last_contact!).getTime() - new Date(a.last_contact!).getTime())
-                    .slice(0, 10)
-                    .map((person) => (
-                      <li key={person.id} className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <Link href={`/client/${person.id}`} className="text-blue-600 hover:underline">
-                          {person.first_name} {person.last_name}
-                        </Link>
-                        <span className="text-sm text-gray-500">
-                          {person.last_contact && format(new Date(person.last_contact), 'MMM dd')}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 italic">No recent contacts</p>
-              )}
-            </div>
-          </div>
-
-          {/* Needs Outreach */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
-              Needs Outreach (Inactive 90+ days)
-              <span className="ml-2 text-sm font-normal text-gray-500">({inactiveClients.length})</span>
-            </h3>
-            <div className="max-h-64 overflow-y-auto">
-              {inactiveClients.length > 0 ? (
-                <ul className="space-y-2">
-                  {inactiveClients
-                    .sort((a, b) => {
-                      if (!a.last_contact) return -1
-                      if (!b.last_contact) return 1
-                      return new Date(a.last_contact).getTime() - new Date(b.last_contact).getTime()
-                    })
-                    .slice(0, 10)
-                    .map((person) => (
-                      <li key={person.id} className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <Link href={`/client/${person.id}`} className="text-blue-600 hover:underline">
-                          {person.first_name} {person.last_name}
-                        </Link>
-                        <span className="text-sm text-gray-500">
-                          {person.last_contact
-                            ? format(new Date(person.last_contact), 'MMM dd, yyyy')
-                            : 'Never'}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 italic">All clients are active</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Data Export */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Data Summary</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-700">{allPersons.length}</p>
-              <p className="text-sm text-gray-600">Total Clients</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-700">{totalContacts.toLocaleString()}</p>
-              <p className="text-sm text-gray-600">Total Contacts</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-700">
-                {Math.round(activeClients.length / allPersons.length * 100)}%
-              </p>
-              <p className="text-sm text-gray-600">Active Rate</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-700">{avgContacts}</p>
-              <p className="text-sm text-gray-600">Avg Contacts</p>
-            </div>
-          </div>
-        </div>
+        {/* Date Range Filter */}
+        <DashboardClient
+          initialStartDate={startDate}
+          initialEndDate={endDate}
+          dateRangeText={dateRangeText}
+          metrics={metrics}
+          demographics={demographics}
+          serviceTypes={serviceTypes}
+          matByProvider={matByProvider}
+          detoxByProvider={detoxByProvider}
+          placementsByLocation={placementsByLocation}
+          locations={locations}
+          allPersons={allPersons.map(p => ({
+            id: p.id,
+            client_id: p.client_id,
+            first_name: p.first_name,
+            last_name: p.last_name || '',
+            nickname: p.nickname,
+            date_of_birth: p.date_of_birth || '',
+            gender: p.gender || 'Unknown',
+            race: p.race || 'Unknown',
+            ethnicity: p.ethnicity || 'Unknown',
+            sexual_orientation: p.sexual_orientation,
+            living_situation: p.living_situation || 'Unknown',
+            length_of_time_homeless: null,
+            veteran_status: p.veteran_status,
+            chronic_homeless: p.chronic_homeless,
+            enrollment_date: p.enrollment_date,
+            case_manager: null,
+            referral_source: null,
+            disability_status: p.disability_status,
+            disability_type: p.disability_type,
+            exit_date: p.exit_date,
+            exit_destination: p.exit_destination,
+            exit_notes: p.exit_notes,
+          }))}
+          filteredPersons={filteredPersons.map(p => ({
+            id: p.id,
+            client_id: p.client_id,
+            first_name: p.first_name,
+            last_name: p.last_name || '',
+            nickname: p.nickname,
+            date_of_birth: p.date_of_birth || '',
+            gender: p.gender || 'Unknown',
+            race: p.race || 'Unknown',
+            ethnicity: p.ethnicity || 'Unknown',
+            sexual_orientation: p.sexual_orientation,
+            living_situation: p.living_situation || 'Unknown',
+            length_of_time_homeless: null,
+            veteran_status: p.veteran_status,
+            chronic_homeless: p.chronic_homeless,
+            enrollment_date: p.enrollment_date,
+            case_manager: null,
+            referral_source: null,
+            disability_status: p.disability_status,
+            disability_type: p.disability_type,
+            exit_date: p.exit_date,
+            exit_destination: p.exit_destination,
+            exit_notes: p.exit_notes,
+          }))}
+          filteredEncounters={filteredEncounters.map(e => ({
+            id: e.id,
+            service_date: e.service_date,
+            person_id: e.person_id,
+            outreach_location: e.outreach_location,
+            latitude: e.latitude || 0,
+            longitude: e.longitude || 0,
+            outreach_worker: e.outreach_worker,
+            language_preference: null,
+            co_occurring_mh_sud: e.co_occurring_mh_sud,
+            co_occurring_type: e.co_occurring_type,
+            mat_referral: e.mat_referral,
+            mat_type: e.mat_type,
+            mat_provider: e.mat_provider,
+            detox_referral: e.detox_referral,
+            detox_provider: e.detox_provider,
+            fentanyl_test_strips_count: e.fentanyl_test_strips_count,
+            harm_reduction_education: e.harm_reduction_education || false,
+            transportation_provided: e.transportation_provided,
+            shower_trailer: e.shower_trailer || false,
+            other_services: null,
+            placement_made: e.placement_made,
+            placement_location: e.placement_location,
+            placement_location_other: e.placement_location_other,
+            refused_shelter: e.refused_shelter,
+            high_utilizer_contact: e.high_utilizer_contact,
+            case_management_notes: e.case_management_notes,
+          }))}
+          statusChanges={statusChanges}
+          activeClients={activeClients.length}
+          inactiveClients={inactiveClients.length}
+          exitedClients={exitedClients.length}
+          totalContacts={totalContacts}
+          recentlyContacted={recentlyContacted.map(p => ({
+            id: p.id,
+            first_name: p.first_name,
+            last_name: p.last_name || '',
+            last_contact: p.last_contact,
+          }))}
+          personsWithExits={personsWithExits.map(p => ({
+            id: p.id,
+            first_name: p.first_name,
+            last_name: p.last_name || '',
+            exit_date: p.exit_date,
+            exit_destination: p.exit_destination,
+          }))}
+        />
 
         {/* Duplicate Detection */}
         <div className="mt-6">
