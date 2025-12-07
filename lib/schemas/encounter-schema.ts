@@ -59,6 +59,9 @@ export const PLACEMENT_LOCATIONS = [
   'Restoration Ranch',
   'Mission Academy',
   'South County Lighthouse',
+  'ONC',
+  'Solutions for Change',
+  'Operation Hope',
   'Shelter Not Available',
   'Other',
 ] as const
