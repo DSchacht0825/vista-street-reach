@@ -18,6 +18,7 @@ export default function EncounterHeatMap({ locations }: EncounterHeatMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -55,9 +56,49 @@ export default function EncounterHeatMap({ locations }: EncounterHeatMapProps) {
       // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
 
+      // Add fullscreen control
+      map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right')
+
       // Add markers for each location
-      map.current.on('load', () => {
+      map.current.on('load', async () => {
         if (!map.current) return
+
+        // Load and add Vista city boundary
+        try {
+          const response = await fetch('/vista-boundary.geojson')
+          const vistaBoundary = await response.json()
+
+          // Add Vista boundary source
+          map.current?.addSource('vista-boundary', {
+            type: 'geojson',
+            data: vistaBoundary,
+          })
+
+          // Add Vista boundary outline layer (bottom layer)
+          map.current?.addLayer({
+            id: 'vista-boundary-fill',
+            type: 'fill',
+            source: 'vista-boundary',
+            paint: {
+              'fill-color': '#3b82f6',
+              'fill-opacity': 0.05,
+            },
+          })
+
+          // Add Vista boundary outline
+          map.current?.addLayer({
+            id: 'vista-boundary-line',
+            type: 'line',
+            source: 'vista-boundary',
+            paint: {
+              'line-color': '#1e40af',
+              'line-width': 3,
+              'line-opacity': 0.8,
+            },
+          })
+        } catch (error) {
+          console.error('Failed to load Vista boundary:', error)
+        }
 
         // Create GeoJSON from locations
         const geojson: GeoJSON.FeatureCollection<GeoJSON.Point> = {
@@ -256,13 +297,63 @@ export default function EncounterHeatMap({ locations }: EncounterHeatMapProps) {
     )
   }
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen)
+    // Resize map after state change
+    setTimeout(() => {
+      map.current?.resize()
+    }, 100)
+  }
+
   return (
-    <div>
-      <div ref={mapContainer} className="h-96 rounded-lg" />
-      <p className="text-sm text-gray-600 mt-3">
-        Showing {locations.length} service interaction{locations.length !== 1 ? 's' : ''}{' '}
-        on map. Click clusters to expand, click individual points for details.
-      </p>
+    <div className={isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'relative'}>
+      {/* Controls overlay */}
+      <div className={`absolute z-10 flex gap-2 ${isFullscreen ? 'top-4 right-4' : 'top-3 left-3'}`}>
+        <button
+          onClick={toggleFullscreen}
+          className="bg-white px-3 py-2 rounded-lg shadow-lg hover:bg-gray-100 transition-colors flex items-center gap-2 text-sm font-medium"
+        >
+          {isFullscreen ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Close
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+              Expand Map
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Info overlay for fullscreen */}
+      {isFullscreen && (
+        <div className="absolute top-4 left-4 z-10 bg-white px-3 py-2 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-700">
+            {locations.length} service interaction{locations.length !== 1 ? 's' : ''}
+          </p>
+          <p className="text-xs text-gray-500">City of Vista boundary shown in blue</p>
+        </div>
+      )}
+
+      {/* Map container */}
+      <div
+        ref={mapContainer}
+        className={isFullscreen ? 'w-full h-full' : 'h-96 rounded-lg'}
+      />
+
+      {/* Description text (only in normal view) */}
+      {!isFullscreen && (
+        <p className="text-sm text-gray-600 mt-3">
+          Showing {locations.length} service interaction{locations.length !== 1 ? 's' : ''}{' '}
+          on map. City of Vista boundary shown in blue. Click clusters to expand, click individual points for details.
+        </p>
+      )}
     </div>
   )
 }

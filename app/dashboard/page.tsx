@@ -18,12 +18,15 @@ export default async function DashboardPage({
   const startDate = params.start_date || ''
   const endDate = params.end_date || ''
 
-  // Helper function to get local date string from timestamp
-  const getLocalDateString = (dateStr: string): string => {
+  // Helper function to get Pacific time date string from UTC timestamp
+  // Pacific time is UTC-8 (PST) or UTC-7 (PDT)
+  const getPacificDateString = (dateStr: string): string => {
     const date = new Date(dateStr)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    // Use toLocaleString to get the date in Pacific timezone
+    const pacificDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+    const year = pacificDate.getFullYear()
+    const month = String(pacificDate.getMonth() + 1).padStart(2, '0')
+    const day = String(pacificDate.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
 
@@ -164,17 +167,17 @@ export default async function DashboardPage({
   const allEncounters = (allEncountersData || []) as EncounterData[]
   const statusChanges = (statusChangesData || []) as StatusChange[]
 
-  // Filter encounters by date range if specified
+  // Filter encounters by date range if specified (using Pacific timezone)
   let filteredEncounters = allEncounters
   if (startDate) {
     filteredEncounters = filteredEncounters.filter(e => {
-      const serviceDate = getLocalDateString(e.service_date)
+      const serviceDate = getPacificDateString(e.service_date)
       return serviceDate >= startDate
     })
   }
   if (endDate) {
     filteredEncounters = filteredEncounters.filter(e => {
-      const serviceDate = getLocalDateString(e.service_date)
+      const serviceDate = getPacificDateString(e.service_date)
       return serviceDate <= endDate
     })
   }
@@ -245,14 +248,19 @@ export default async function DashboardPage({
     totalIncome: filteredPersons.reduce((sum, p) => sum + (p.income_amount || 0), 0),
   }
 
-  // Locations for heat map - only encounters with GPS data
+  // Locations for heat map - only encounters with GPS data (using Pacific timezone for display)
   const locations = filteredEncounters
     .filter(e => e.latitude && e.longitude)
-    .map(e => ({
-      latitude: e.latitude!,
-      longitude: e.longitude!,
-      date: format(new Date(e.service_date), 'MMM dd, yyyy'),
-    }))
+    .map(e => {
+      // Convert to Pacific time for display
+      const utcDate = new Date(e.service_date)
+      const pacificDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+      return {
+        latitude: e.latitude!,
+        longitude: e.longitude!,
+        date: format(pacificDate, 'MMM dd, yyyy'),
+      }
+    })
 
   // Total contacts
   const totalContacts = allPersons.reduce((sum, p) => sum + (p.contact_count || 0), 0)
