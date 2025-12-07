@@ -48,6 +48,22 @@ export const CO_OCCURRING_TYPES = [
   'Other',
 ] as const
 
+// Outreach workers
+export const OUTREACH_WORKERS = [
+  'Alex',
+  'Marsha',
+  'Cindy',
+  'Vanessa',
+  'Angel',
+  'Khaliha',
+  'Carolina',
+  'Sebastian',
+  'Ian',
+  'Kaylyn',
+  'Deborah',
+  'Kenny',
+] as const
+
 // Placement locations
 export const PLACEMENT_LOCATIONS = [
   'BCNC',

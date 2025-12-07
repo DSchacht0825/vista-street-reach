@@ -8,6 +8,7 @@ import {
   type EncounterFormData,
   CO_OCCURRING_TYPES,
   PLACEMENT_LOCATIONS,
+  OUTREACH_WORKERS,
 } from '@/lib/schemas/encounter-schema'
 import { REFERRAL_SOURCES } from '@/lib/schemas/intake-schema'
 import { useGeolocation } from '@/lib/hooks/useGeolocation'
@@ -316,12 +317,17 @@ export default function ServiceInteractionForm({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Outreach Worker <span className="text-red-500">*</span>
             </label>
-            <input
+            <select
               {...register('outreach_worker')}
-              type="text"
-              placeholder="Your name"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              <option value="">Select outreach worker</option>
+              {OUTREACH_WORKERS.map((worker) => (
+                <option key={worker} value={worker}>
+                  {worker}
+                </option>
+              ))}
+            </select>
             {errors.outreach_worker && (
               <p className="text-red-500 text-sm mt-1">{errors.outreach_worker.message}</p>
             )}
