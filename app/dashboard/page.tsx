@@ -6,6 +6,10 @@ import LogoutButton from '@/components/LogoutButton'
 import DuplicateManagerWrapper from '@/components/DuplicateManagerWrapper'
 import DashboardClient from './DashboardClient'
 
+// Disable caching for this page - always fetch fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardPage({
   searchParams,
 }: {
