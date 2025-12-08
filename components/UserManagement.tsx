@@ -109,7 +109,7 @@ export default function UserManagement() {
 
     try {
       const { error } = await supabase
-        .from('user_profiles')
+        .from('users')
         .update({ role: newRole } as never)
         .eq('id', userId)
 

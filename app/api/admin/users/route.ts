@@ -19,7 +19,7 @@ export async function GET() {
 
     // Check if user is admin
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single<UserProfile>()
@@ -38,7 +38,7 @@ export async function GET() {
 
     // Get user profiles
     const { data: profiles, error: profileError } = await adminClient
-      .from('user_profiles')
+      .from('users')
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     // Check if user is admin
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single<UserProfile>()
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
 
     // Create user profile
     const { error: profileError } = await adminClient
-      .from('user_profiles')
+      .from('users')
       .insert({
         id: authData.user.id,
         email,
