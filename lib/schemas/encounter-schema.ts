@@ -24,6 +24,9 @@ export const encounterFormSchema = z.object({
   shower_trailer: z.boolean(),
   other_services: z.string().optional().nullable(),
 
+  // Support Services (multi-select)
+  support_services: z.array(z.string()).default([]),
+
   // Placement
   placement_made: z.boolean(),
   placement_location: z.string().optional().nullable(),
@@ -79,5 +82,16 @@ export const PLACEMENT_LOCATIONS = [
   'ONC',
   'Solutions for Change',
   'Operation Hope',
+  'Bridge Housing',
+  'Family Reunification',
   'Other',
+] as const
+
+// Support services (multi-select options)
+export const SUPPORT_SERVICES = [
+  { value: 'birth_certificate', label: 'Birth Certificate Assistance' },
+  { value: 'ss_card', label: 'Social Security Card Assistance' },
+  { value: 'food_stamps', label: 'CalFresh/Food Stamps Enrollment' },
+  { value: 'medi_cal', label: 'Medi-Cal Enrollment' },
+  { value: 'food_provided', label: 'Food/Meals Provided' },
 ] as const

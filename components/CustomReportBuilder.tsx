@@ -57,6 +57,7 @@ interface Encounter {
   shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
+  support_services?: string[]
 }
 
 interface StatusChange {
@@ -98,6 +99,15 @@ interface GeneratedReport {
     highUtilizerContacts: number
     programExits: number
     returnedToActive: number
+    // Support services
+    birthCertificate: number
+    ssCard: number
+    foodStamps: number
+    mediCal: number
+    foodProvided: number
+    // Special placements
+    bridgeHousing: number
+    familyReunification: number
   }
   breakdowns: {
     matByProvider: Record<string, number>
@@ -152,6 +162,15 @@ export default function CustomReportBuilder({
   const [includeReturnedToActive, setIncludeReturnedToActive] = useState(true)
   const [includeByNameList, setIncludeByNameList] = useState(false)
   const [includeInteractionsDetail, setIncludeInteractionsDetail] = useState(false)
+  // Support services
+  const [includeBirthCertificate, setIncludeBirthCertificate] = useState(true)
+  const [includeSsCard, setIncludeSsCard] = useState(true)
+  const [includeFoodStamps, setIncludeFoodStamps] = useState(true)
+  const [includeMediCal, setIncludeMediCal] = useState(true)
+  const [includeFoodProvided, setIncludeFoodProvided] = useState(true)
+  // Special placements
+  const [includeBridgeHousing, setIncludeBridgeHousing] = useState(true)
+  const [includeFamilyReunification, setIncludeFamilyReunification] = useState(true)
 
   // Demographic breakdown selections
   const [includeByRace, setIncludeByRace] = useState(false)
@@ -427,6 +446,17 @@ export default function CustomReportBuilder({
       // Calculate shelter unavailable
       const shelterUnavailable = filteredEncounters.filter(e => e.shelter_unavailable).length
 
+      // Calculate support services
+      const birthCertificate = filteredEncounters.filter(e => e.support_services?.includes('birth_certificate')).length
+      const ssCard = filteredEncounters.filter(e => e.support_services?.includes('ss_card')).length
+      const foodStamps = filteredEncounters.filter(e => e.support_services?.includes('food_stamps')).length
+      const mediCal = filteredEncounters.filter(e => e.support_services?.includes('medi_cal')).length
+      const foodProvided = filteredEncounters.filter(e => e.support_services?.includes('food_provided')).length
+
+      // Calculate special placements
+      const bridgeHousing = filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length
+      const familyReunification = filteredEncounters.filter(e => e.placement_location === 'Family Reunification').length
+
       // Placement breakdown by location
       const placementsByLocation = filteredEncounters
         .filter(e => e.placement_made)
@@ -613,6 +643,64 @@ export default function CustomReportBuilder({
           'Metric': 'Shelter Unavailable',
           'Value': shelterUnavailable,
           'Description': 'No shelter beds were available',
+        })
+      }
+
+      // Support services metrics
+      if (includeBirthCertificate) {
+        reportData.push({
+          'Metric': 'Birth Certificate Assistance',
+          'Value': birthCertificate,
+          'Description': 'Help obtaining birth certificates',
+        })
+      }
+
+      if (includeSsCard) {
+        reportData.push({
+          'Metric': 'Social Security Card Assistance',
+          'Value': ssCard,
+          'Description': 'Help obtaining SS cards',
+        })
+      }
+
+      if (includeFoodStamps) {
+        reportData.push({
+          'Metric': 'CalFresh/Food Stamps Enrollment',
+          'Value': foodStamps,
+          'Description': 'Help with food assistance enrollment',
+        })
+      }
+
+      if (includeMediCal) {
+        reportData.push({
+          'Metric': 'Medi-Cal Enrollment',
+          'Value': mediCal,
+          'Description': 'Help with Medi-Cal enrollment',
+        })
+      }
+
+      if (includeFoodProvided) {
+        reportData.push({
+          'Metric': 'Food/Meals Provided',
+          'Value': foodProvided,
+          'Description': 'Food or meals given to clients',
+        })
+      }
+
+      // Special placements
+      if (includeBridgeHousing) {
+        reportData.push({
+          'Metric': 'Bridge Housing Placements',
+          'Value': bridgeHousing,
+          'Description': 'Transitional housing placements',
+        })
+      }
+
+      if (includeFamilyReunification) {
+        reportData.push({
+          'Metric': 'Family Reunification',
+          'Value': familyReunification,
+          'Description': 'Reconnected with family',
         })
       }
 
@@ -962,6 +1050,13 @@ export default function CustomReportBuilder({
           highUtilizerContacts,
           programExits,
           returnedToActive,
+          birthCertificate,
+          ssCard,
+          foodStamps,
+          mediCal,
+          foodProvided,
+          bridgeHousing,
+          familyReunification,
         },
         breakdowns: {
           matByProvider,
@@ -1169,6 +1264,86 @@ export default function CustomReportBuilder({
               className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 font-medium">⚠️ High Utilizers (Unique Count)</span>
+          </label>
+
+          {/* Support Services */}
+          <div className="col-span-2 mt-2 pt-2 border-t border-gray-200">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Support Services</p>
+          </div>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-blue-50 p-2 rounded border border-blue-200">
+            <input
+              type="checkbox"
+              checked={includeBirthCertificate}
+              onChange={(e) => setIncludeBirthCertificate(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">📄 Birth Certificate</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-indigo-50 p-2 rounded border border-indigo-200">
+            <input
+              type="checkbox"
+              checked={includeSsCard}
+              onChange={(e) => setIncludeSsCard(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🪪 Social Security Card</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-green-50 p-2 rounded border border-green-200">
+            <input
+              type="checkbox"
+              checked={includeFoodStamps}
+              onChange={(e) => setIncludeFoodStamps(e.target.checked)}
+              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🛒 CalFresh/Food Stamps</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-teal-50 p-2 rounded border border-teal-200">
+            <input
+              type="checkbox"
+              checked={includeMediCal}
+              onChange={(e) => setIncludeMediCal(e.target.checked)}
+              className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🏥 Medi-Cal</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-amber-50 p-2 rounded border border-amber-200">
+            <input
+              type="checkbox"
+              checked={includeFoodProvided}
+              onChange={(e) => setIncludeFoodProvided(e.target.checked)}
+              className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🍽️ Food/Meals Provided</span>
+          </label>
+
+          {/* Special Placements */}
+          <div className="col-span-2 mt-2 pt-2 border-t border-gray-200">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Special Placements</p>
+          </div>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-purple-50 p-2 rounded border border-purple-200">
+            <input
+              type="checkbox"
+              checked={includeBridgeHousing}
+              onChange={(e) => setIncludeBridgeHousing(e.target.checked)}
+              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🌉 Bridge Housing</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-pink-50 p-2 rounded border border-pink-200">
+            <input
+              type="checkbox"
+              checked={includeFamilyReunification}
+              onChange={(e) => setIncludeFamilyReunification(e.target.checked)}
+              className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">👨‍👩‍👧 Family Reunification</span>
           </label>
 
           <label className="flex items-center space-x-2 cursor-pointer hover:bg-green-50 p-2 rounded border border-green-200">

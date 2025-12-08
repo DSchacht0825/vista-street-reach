@@ -63,6 +63,7 @@ interface Encounter {
   shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
+  support_services?: string[]
 }
 
 interface StatusChange {
@@ -117,6 +118,15 @@ interface DashboardClientProps {
     refusedShelter: number
     shelterUnavailable: number
     highUtilizer: number
+    // Support services
+    birthCertificate: number
+    ssCard: number
+    foodStamps: number
+    mediCal: number
+    foodProvided: number
+    // Placement breakdown
+    bridgeHousing: number
+    familyReunification: number
   }
   demographics: {
     byGender: Record<string, number>
@@ -332,6 +342,56 @@ export default function DashboardClient({
             <p className="text-xs text-gray-500">Frequent service contacts</p>
           </div>
         </div>
+
+        {/* Support Services Row */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-blue-500">
+            <p className="text-3xl font-bold text-blue-600">{metrics.birthCertificate}</p>
+            <p className="text-sm text-gray-600 mt-1">Birth Certificate</p>
+            <p className="text-xs text-gray-500">Assistance provided</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-indigo-500">
+            <p className="text-3xl font-bold text-indigo-600">{metrics.ssCard}</p>
+            <p className="text-sm text-gray-600 mt-1">Social Security Card</p>
+            <p className="text-xs text-gray-500">Assistance provided</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-green-500">
+            <p className="text-3xl font-bold text-green-600">{metrics.foodStamps}</p>
+            <p className="text-sm text-gray-600 mt-1">CalFresh/Food Stamps</p>
+            <p className="text-xs text-gray-500">Enrollment help</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-teal-500">
+            <p className="text-3xl font-bold text-teal-600">{metrics.mediCal}</p>
+            <p className="text-sm text-gray-600 mt-1">Medi-Cal</p>
+            <p className="text-xs text-gray-500">Enrollment help</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-amber-500">
+            <p className="text-3xl font-bold text-amber-600">{metrics.foodProvided}</p>
+            <p className="text-sm text-gray-600 mt-1">Food/Meals</p>
+            <p className="text-xs text-gray-500">Provided to clients</p>
+          </div>
+        </div>
+
+        {/* Special Placements Row */}
+        {(metrics.bridgeHousing > 0 || metrics.familyReunification > 0) && (
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-purple-500">
+              <p className="text-3xl font-bold text-purple-600">{metrics.bridgeHousing}</p>
+              <p className="text-sm text-gray-600 mt-1">Bridge Housing</p>
+              <p className="text-xs text-gray-500">Transitional placements</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-pink-500">
+              <p className="text-3xl font-bold text-pink-600">{metrics.familyReunification}</p>
+              <p className="text-sm text-gray-600 mt-1">Family Reunification</p>
+              <p className="text-xs text-gray-500">Reconnected with family</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Referral Breakdown */}

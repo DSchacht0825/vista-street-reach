@@ -151,6 +151,7 @@ export default async function DashboardPage({
     case_management_notes?: string | null
     naloxone_distributed?: boolean
     naloxone_date?: string | null
+    support_services?: string[] | null
   }
 
   type StatusChange = {
@@ -224,6 +225,15 @@ export default async function DashboardPage({
     refusedShelter: filteredEncounters.filter(e => e.refused_shelter).length,
     shelterUnavailable: filteredEncounters.filter(e => e.shelter_unavailable).length,
     highUtilizer: filteredEncounters.filter(e => e.high_utilizer_contact).length,
+    // Support services
+    birthCertificate: filteredEncounters.filter(e => e.support_services?.includes('birth_certificate')).length,
+    ssCard: filteredEncounters.filter(e => e.support_services?.includes('ss_card')).length,
+    foodStamps: filteredEncounters.filter(e => e.support_services?.includes('food_stamps')).length,
+    mediCal: filteredEncounters.filter(e => e.support_services?.includes('medi_cal')).length,
+    foodProvided: filteredEncounters.filter(e => e.support_services?.includes('food_provided')).length,
+    // Placement breakdown
+    bridgeHousing: filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length,
+    familyReunification: filteredEncounters.filter(e => e.placement_location === 'Family Reunification').length,
   }
 
   // Demographics breakdown
@@ -458,6 +468,7 @@ export default async function DashboardPage({
             shelter_unavailable: e.shelter_unavailable,
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
+            support_services: e.support_services || [],
           }))}
           filteredPersons={filteredPersons.map(p => ({
             id: p.id,
@@ -511,6 +522,7 @@ export default async function DashboardPage({
             shelter_unavailable: e.shelter_unavailable,
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
+            support_services: e.support_services || [],
           }))}
           statusChanges={statusChanges}
           activeClients={activeClients.length}

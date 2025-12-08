@@ -9,6 +9,7 @@ import {
   CO_OCCURRING_TYPES,
   PLACEMENT_LOCATIONS,
   OUTREACH_WORKERS,
+  SUPPORT_SERVICES,
 } from '@/lib/schemas/encounter-schema'
 import { REFERRAL_SOURCES } from '@/lib/schemas/intake-schema'
 import { useGeolocation } from '@/lib/hooks/useGeolocation'
@@ -37,8 +38,9 @@ export default function ServiceInteractionForm({
     watch,
     setValue,
     formState: { errors },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<EncounterFormData>({
-    resolver: zodResolver(encounterFormSchema),
+    resolver: zodResolver(encounterFormSchema) as any,
     defaultValues: {
       service_date: new Date().toISOString().split('T')[0],
       co_occurring_mh_sud: false,
@@ -48,6 +50,7 @@ export default function ServiceInteractionForm({
       refused_shelter: false,
       shelter_unavailable: false,
       high_utilizer_contact: false,
+      support_services: [],
     },
   })
 
@@ -103,6 +106,7 @@ export default function ServiceInteractionForm({
           co_occurring_type: data.co_occurring_type || null,
           transportation_provided: data.transportation_provided,
           shower_trailer: data.shower_trailer,
+          support_services: data.support_services || [],
           other_services: data.other_services || null,
           placement_made: data.placement_made,
           placement_location: data.placement_location || null,
@@ -433,9 +437,31 @@ export default function ServiceInteractionForm({
             </label>
           </div>
 
+          {/* Support Services Multi-Select */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Support Services Provided
+            </label>
+            <div className="space-y-2 bg-gray-50 p-3 rounded-md border border-gray-200">
+              {SUPPORT_SERVICES.map((service) => (
+                <div key={service.value} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    value={service.value}
+                    {...register('support_services')}
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-700">
+                    {service.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Other Services (IDs, birth certificates, food, clothing, etc.)
+              Other Services (clothing, hygiene items, etc.)
             </label>
             <textarea
               {...register('other_services')}
