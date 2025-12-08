@@ -140,6 +140,7 @@ interface DashboardClientProps {
   placementsByLocation: Record<string, number>
   locations: Location[]
   allPersons: Person[]
+  allEncounters: Encounter[]
   filteredPersons: Person[]
   filteredEncounters: Encounter[]
   statusChanges: StatusChange[]
@@ -163,6 +164,7 @@ export default function DashboardClient({
   placementsByLocation,
   locations,
   allPersons,
+  allEncounters,
   filteredPersons,
   filteredEncounters,
   statusChanges,
@@ -639,7 +641,7 @@ export default function DashboardClient({
         {showReportBuilder && (
           <CustomReportBuilder
             persons={allPersons}
-            encounters={filteredEncounters}
+            encounters={allEncounters}
             statusChanges={statusChanges}
           />
         )}
