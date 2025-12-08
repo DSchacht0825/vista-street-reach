@@ -54,8 +54,8 @@ export const CO_OCCURRING_TYPES = [
   'Other',
 ] as const
 
-// Outreach workers
-export const OUTREACH_WORKERS = [
+// Outreach workers (first names for new interactions)
+export const OUTREACH_WORKERS_SHORT = [
   'Alex',
   'Marsha',
   'Cindy',
@@ -68,6 +68,35 @@ export const OUTREACH_WORKERS = [
   'Kaylyn',
   'Deborah',
   'Kenny',
+] as const
+
+// Full names for filtering (includes imported data workers)
+export const OUTREACH_WORKERS = [
+  'Alex',
+  'Alex Barragan',
+  'Marsha',
+  'Marsha Duka',
+  'Cindy',
+  'Cindy Ibanez',
+  'Vanessa',
+  'Vanessa Alvarez',
+  'Angel',
+  'Angel Lopez',
+  'Khaliah',
+  'Khalia Norman',
+  'Carolina',
+  'Carolina Portales',
+  'Sebastian',
+  'Sebastian De La Torre',
+  'Ian',
+  'Ian Raniey',
+  'Kaylyn',
+  'Kaylyn Jason',
+  'Deborah',
+  'Deborah Grinstaff',
+  'Kenny',
+  'Kenneth Tolbert',
+  'Mario Moreno',
 ] as const
 
 // Placement locations
