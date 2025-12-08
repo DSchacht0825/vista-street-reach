@@ -15,7 +15,6 @@ export const intakeFormSchema = z.object({
   weight: z.string().max(50).optional().nullable(),
   hair_color: z.string().max(50).optional().nullable(),
   eye_color: z.string().max(50).optional().nullable(),
-  physical_description: z.string().optional().nullable(),
 
   // Contact & Notes
   notes: z.string().optional().nullable(),

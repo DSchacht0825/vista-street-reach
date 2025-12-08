@@ -187,7 +187,6 @@ export default function IntakeForm() {
             weight: data.weight || null,
             hair_color: data.hair_color || null,
             eye_color: data.eye_color || null,
-            physical_description: data.physical_description || null,
             notes: data.notes || null,
             // Contact info
             phone_number: data.phone_number || null,
@@ -501,18 +500,6 @@ export default function IntakeForm() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="md:col-span-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Physical Description
-              </label>
-              <textarea
-                {...register('physical_description')}
-                rows={3}
-                placeholder="Distinguishing features: tattoos, scars, birthmarks, etc."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
             </div>
 
             <div className="md:col-span-4">
