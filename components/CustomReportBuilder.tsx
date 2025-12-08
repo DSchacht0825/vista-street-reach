@@ -213,13 +213,15 @@ export default function CustomReportBuilder({
         return age
       }
 
-      // Helper function to get local date string (YYYY-MM-DD) from timestamp
-      // This properly handles timezone offsets by parsing the date and extracting local date
-      const getLocalDateString = (dateStr: string): string => {
+      // Helper function to get Pacific timezone date string (YYYY-MM-DD) from timestamp
+      // Service dates are stored as UTC but represent Pacific time dates
+      const getPacificDateString = (dateStr: string): string => {
         const date = new Date(dateStr)
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
+        // Convert to Pacific timezone
+        const pacificDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+        const year = pacificDate.getFullYear()
+        const month = String(pacificDate.getMonth() + 1).padStart(2, '0')
+        const day = String(pacificDate.getDate()).padStart(2, '0')
         return `${year}-${month}-${day}`
       }
 
@@ -230,20 +232,20 @@ export default function CustomReportBuilder({
       if (startDate && endDate) {
         // Both dates provided: filter between range
         filteredEncounters = filteredEncounters.filter(e => {
-          const localDate = getLocalDateString(e.service_date)
-          return localDate >= startDate && localDate <= endDate
+          const serviceDate = getPacificDateString(e.service_date)
+          return serviceDate >= startDate && serviceDate <= endDate
         })
       } else if (startDate) {
         // Only start date: filter from start date onwards
         filteredEncounters = filteredEncounters.filter(e => {
-          const localDate = getLocalDateString(e.service_date)
-          return localDate >= startDate
+          const serviceDate = getPacificDateString(e.service_date)
+          return serviceDate >= startDate
         })
       } else if (endDate) {
         // Only end date: filter up to end date
         filteredEncounters = filteredEncounters.filter(e => {
-          const localDate = getLocalDateString(e.service_date)
-          return localDate <= endDate
+          const serviceDate = getPacificDateString(e.service_date)
+          return serviceDate <= endDate
         })
       }
 
@@ -260,7 +262,7 @@ export default function CustomReportBuilder({
         persons
           .filter(p => {
             if (!p.exit_date) return false
-            const exitDateStr = getLocalDateString(p.exit_date)
+            const exitDateStr = getPacificDateString(p.exit_date)
             if (startDate && endDate) {
               return exitDateStr >= startDate && exitDateStr <= endDate
             } else if (startDate) {
@@ -352,7 +354,7 @@ export default function CustomReportBuilder({
         if (!p.exit_date || !p.exit_destination) return false
 
         // Check if exit is within date range
-        const exitDateStr = getLocalDateString(p.exit_date)
+        const exitDateStr = getPacificDateString(p.exit_date)
         const inDateRange = startDate && endDate
           ? (exitDateStr >= startDate && exitDateStr <= endDate)
           : startDate
@@ -370,7 +372,7 @@ export default function CustomReportBuilder({
       // Calculate program exits breakdown by category
       const personsWithExits = filteredPersons.filter(p => {
         if (!p.exit_date || !p.exit_destination) return false
-        const exitDateStr = getLocalDateString(p.exit_date)
+        const exitDateStr = getPacificDateString(p.exit_date)
         const inDateRange = startDate && endDate
           ? (exitDateStr >= startDate && exitDateStr <= endDate)
           : startDate
@@ -386,7 +388,7 @@ export default function CustomReportBuilder({
       // Calculate returned to active from status_changes
       const returnedToActiveRecords = statusChanges.filter(sc => {
         if (sc.change_type !== 'return_to_active') return false
-        const changeDateStr = getLocalDateString(sc.change_date)
+        const changeDateStr = getPacificDateString(sc.change_date)
         if (startDate && endDate) {
           return changeDateStr >= startDate && changeDateStr <= endDate
         } else if (startDate) {
