@@ -98,6 +98,7 @@ export const SUPPORT_SERVICES = [
   { value: 'food_stamps', label: 'CalFresh/Food Stamps Enrollment' },
   { value: 'medi_cal', label: 'Medi-Cal Enrollment' },
   { value: 'food_provided', label: 'Food/Meals Provided' },
+  { value: 'phone_assistance', label: 'Phone Assistance' },
 ] as const
 
 // Service subtypes from Vista/Eponic system

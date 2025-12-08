@@ -125,6 +125,7 @@ interface DashboardClientProps {
     foodStamps: number
     mediCal: number
     foodProvided: number
+    phoneAssistance: number
     // Placement breakdown
     bridgeHousing: number
     familyReunification: number
@@ -348,7 +349,7 @@ export default function DashboardClient({
         </div>
 
         {/* Support Services Row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
           <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-blue-500">
             <p className="text-3xl font-bold text-blue-600">{metrics.birthCertificate}</p>
             <p className="text-sm text-gray-600 mt-1">Birth Certificate</p>
@@ -377,6 +378,12 @@ export default function DashboardClient({
             <p className="text-3xl font-bold text-amber-600">{metrics.foodProvided}</p>
             <p className="text-sm text-gray-600 mt-1">Food/Meals</p>
             <p className="text-xs text-gray-500">Provided to clients</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-cyan-500">
+            <p className="text-3xl font-bold text-cyan-600">{metrics.phoneAssistance}</p>
+            <p className="text-sm text-gray-600 mt-1">Phone Assistance</p>
+            <p className="text-xs text-gray-500">Phone help provided</p>
           </div>
         </div>
 

@@ -236,6 +236,7 @@ export default async function DashboardPage({
     foodStamps: filteredEncounters.filter(e => e.support_services?.includes('food_stamps')).length,
     mediCal: filteredEncounters.filter(e => e.support_services?.includes('medi_cal')).length,
     foodProvided: filteredEncounters.filter(e => e.support_services?.includes('food_provided')).length,
+    phoneAssistance: filteredEncounters.filter(e => e.support_services?.includes('phone_assistance')).length,
     // Placement breakdown
     bridgeHousing: filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length,
     familyReunification: filteredEncounters.filter(e => e.placement_location === 'Family Reunification').length,

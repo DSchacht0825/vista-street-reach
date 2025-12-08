@@ -109,6 +109,7 @@ interface GeneratedReport {
     foodStamps: number
     mediCal: number
     foodProvided: number
+    phoneAssistance: number
     // Special placements
     bridgeHousing: number
     familyReunification: number
@@ -175,6 +176,7 @@ export default function CustomReportBuilder({
   const [includeFoodStamps, setIncludeFoodStamps] = useState(true)
   const [includeMediCal, setIncludeMediCal] = useState(true)
   const [includeFoodProvided, setIncludeFoodProvided] = useState(true)
+  const [includePhoneAssistance, setIncludePhoneAssistance] = useState(true)
   // Special placements
   const [includeBridgeHousing, setIncludeBridgeHousing] = useState(true)
   const [includeFamilyReunification, setIncludeFamilyReunification] = useState(true)
@@ -469,6 +471,7 @@ export default function CustomReportBuilder({
       const foodStamps = filteredEncounters.filter(e => e.support_services?.includes('food_stamps')).length
       const mediCal = filteredEncounters.filter(e => e.support_services?.includes('medi_cal')).length
       const foodProvided = filteredEncounters.filter(e => e.support_services?.includes('food_provided')).length
+      const phoneAssistance = filteredEncounters.filter(e => e.support_services?.includes('phone_assistance')).length
 
       // Calculate special placements
       const bridgeHousing = filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length
@@ -771,6 +774,14 @@ export default function CustomReportBuilder({
           'Metric': 'Food/Meals Provided',
           'Value': foodProvided,
           'Description': 'Food or meals given to clients',
+        })
+      }
+
+      if (includePhoneAssistance) {
+        reportData.push({
+          'Metric': 'Phone Assistance',
+          'Value': phoneAssistance,
+          'Description': 'Phone help provided to clients',
         })
       }
 
@@ -1188,6 +1199,7 @@ export default function CustomReportBuilder({
           foodStamps,
           mediCal,
           foodProvided,
+          phoneAssistance,
           bridgeHousing,
           familyReunification,
           detoxPlacements,
@@ -1477,6 +1489,16 @@ export default function CustomReportBuilder({
               className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 font-medium">🍽️ Food/Meals Provided</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-cyan-50 p-2 rounded border border-cyan-200">
+            <input
+              type="checkbox"
+              checked={includePhoneAssistance}
+              onChange={(e) => setIncludePhoneAssistance(e.target.checked)}
+              className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">📱 Phone Assistance</span>
           </label>
 
           {/* Special Placements */}
