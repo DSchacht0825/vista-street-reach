@@ -147,7 +147,7 @@ export const TEAM_MEMBERS = [
   'Cindy',
   'Vanessa',
   'Angel',
-  'Khaliha',
+  'Khaliah',
   'Carolina',
   'Sebastian',
   'Ian',

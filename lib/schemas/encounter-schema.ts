@@ -61,7 +61,7 @@ export const OUTREACH_WORKERS = [
   'Cindy',
   'Vanessa',
   'Angel',
-  'Khaliha',
+  'Khaliah',
   'Carolina',
   'Sebastian',
   'Ian',
