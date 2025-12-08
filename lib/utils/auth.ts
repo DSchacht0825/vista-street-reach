@@ -22,7 +22,10 @@ export async function isAdmin(): Promise<boolean> {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
+    console.log('isAdmin check - user:', user?.id, user?.email, 'error:', userError?.message)
+
     if (userError || !user) {
+      console.log('isAdmin: No user found or auth error')
       return false
     }
 
@@ -34,12 +37,16 @@ export async function isAdmin(): Promise<boolean> {
       .eq('id', user.id)
       .single()
 
+    console.log('isAdmin check - profile:', profile, 'error:', profileError?.message)
+
     if (profileError) {
       console.error('Profile fetch error in isAdmin:', profileError)
       return false
     }
 
-    return (profile as { role: UserRole } | null)?.role === 'admin'
+    const isAdminResult = (profile as { role: UserRole } | null)?.role === 'admin'
+    console.log('isAdmin result:', isAdminResult)
+    return isAdminResult
   } catch (error) {
     console.error('Unexpected error in isAdmin:', error)
     return false
