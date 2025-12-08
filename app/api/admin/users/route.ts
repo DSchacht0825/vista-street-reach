@@ -17,8 +17,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
+    // Use admin client to bypass RLS for all admin operations
+    const adminClient = createAdminClient()
+
+    // Check if user is admin using admin client to bypass RLS
+    const { data: profile } = await adminClient
       .from('users')
       .select('role')
       .eq('id', user.id)
@@ -27,9 +30,6 @@ export async function GET() {
     if (!profile || profile.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
-
-    // Use admin client to list users
-    const adminClient = createAdminClient()
     const { data: { users: authUsers }, error: authError } = await adminClient.auth.admin.listUsers()
 
     if (authError) {
@@ -76,8 +76,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
+    // Use admin client to bypass RLS for all admin operations
+    const adminClient = createAdminClient()
+
+    // Check if user is admin using admin client to bypass RLS
+    const { data: profile } = await adminClient
       .from('users')
       .select('role')
       .eq('id', user.id)
@@ -96,9 +99,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
-    // Use admin client to create user
-    const adminClient = createAdminClient()
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
