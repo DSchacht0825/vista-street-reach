@@ -154,92 +154,97 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header with back link */}
-        <div className="mb-8 flex justify-between items-start">
-          <div className="flex items-start gap-6">
-            {person.photo_url && (
-              <div className="flex-shrink-0">
-                <Image
-                  src={person.photo_url}
-                  alt={`${person.first_name} ${person.last_name}`}
-                  width={120}
-                  height={120}
-                  className="rounded-lg border-2 border-gray-300 object-cover"
-                  style={{ width: '120px', height: '120px' }}
-                />
-              </div>
-            )}
-            <div>
-              <Link
-                href="/"
-                className="text-blue-700 hover:text-blue-800 font-medium mb-4 inline-flex items-center"
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+        <div className="mb-6">
+          {/* Back link */}
+          <Link
+            href="/"
+            className="text-blue-700 hover:text-blue-800 font-medium mb-3 inline-flex items-center text-sm"
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Client List
+          </Link>
+
+          {/* Client info and buttons row */}
+          <div className="flex justify-between items-start mt-2">
+            <div className="flex items-center gap-4">
+              {person.photo_url && (
+                <div className="flex-shrink-0">
+                  <Image
+                    src={person.photo_url}
+                    alt={`${person.first_name} ${person.last_name}`}
+                    width={80}
+                    height={80}
+                    className="rounded-lg border-2 border-gray-300 object-cover"
+                    style={{ width: '80px', height: '80px' }}
                   />
-                </svg>
-                Back to Client List
-              </Link>
-              <h2 className="text-3xl font-bold text-gray-900 mt-4">
-                {person.first_name} {person.last_name}
-                {person.nickname && (
-                  <span className="text-xl text-gray-600 ml-2">
-                    (aka {person.nickname})
-                  </span>
-                )}
-              </h2>
-              {person.aka && (
-                <p className="text-gray-500 text-sm">AKA: {person.aka}</p>
+                </div>
               )}
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {isActive ? 'Active' : 'Inactive'}
-                </span>
-                {person.client_id && (
-                  <span className="text-gray-500 text-sm">ID: {person.client_id}</span>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {person.first_name} {person.last_name}
+                  {person.nickname && (
+                    <span className="text-lg text-gray-600 ml-2">
+                      ({person.nickname})
+                    </span>
+                  )}
+                </h2>
+                {person.aka && (
+                  <p className="text-gray-500 text-sm">AKA: {person.aka}</p>
                 )}
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  {person.client_id && (
+                    <span className="text-gray-500 text-xs">ID: {person.client_id}</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex gap-3">
-            {!person.exit_date && (
-              <Link
-                href={`/client/${id}/encounter/new`}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="flex gap-2 flex-shrink-0">
+              {!person.exit_date && (
+                <Link
+                  href={`/client/${id}/encounter/new`}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center text-sm"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                New Service Interaction
-              </Link>
-            )}
-            <ExitProgramButton
-              personId={person.id}
-              personName={`${person.first_name} ${person.last_name}`}
-              hasExited={!!person.exit_date}
-              exitDate={person.exit_date}
-              exitDestination={person.exit_destination}
-            />
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  New Interaction
+                </Link>
+              )}
+              <ExitProgramButton
+                personId={person.id}
+                personName={`${person.first_name} ${person.last_name}`}
+                hasExited={!!person.exit_date}
+                exitDate={person.exit_date}
+                exitDestination={person.exit_destination}
+              />
+            </div>
           </div>
         </div>
 

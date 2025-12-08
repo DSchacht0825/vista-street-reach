@@ -149,8 +149,8 @@ export default function ServiceInteractionForm({
           .eq('id', personId)
       }
 
-      // Success! Navigate back to client profile
-      router.push(`/client/${personId}`)
+      // Success! Navigate back to home page
+      router.push('/')
     } catch (error) {
       console.error('Error saving service interaction:', error)
       alert('Error saving service interaction. Please try again.')
