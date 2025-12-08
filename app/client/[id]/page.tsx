@@ -181,8 +181,8 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
           {/* Client info and buttons row */}
           <div className="flex justify-between items-start mt-2">
             <div className="flex items-center gap-4">
-              {person.photo_url && (
-                <div className="flex-shrink-0">
+              <div className="flex-shrink-0">
+                {person.photo_url ? (
                   <Image
                     src={person.photo_url}
                     alt={`${person.first_name} ${person.last_name}`}
@@ -191,8 +191,14 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
                     className="rounded-lg border-2 border-gray-300 object-cover"
                     style={{ width: '80px', height: '80px' }}
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-20 h-20 rounded-lg border-2 border-gray-300 bg-gray-200 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-gray-500">
+                      {person.first_name?.[0]?.toUpperCase() || '?'}{person.last_name?.[0]?.toUpperCase() || ''}
+                    </span>
+                  </div>
+                )}
+              </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
                   {person.first_name} {person.last_name}
@@ -215,11 +221,11 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
                 </div>
               </div>
             </div>
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               {!person.exit_date && (
                 <Link
                   href={`/client/${id}/encounter/new`}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center text-sm"
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center justify-center text-sm"
                 >
                   <svg
                     className="w-4 h-4 mr-1"
@@ -237,6 +243,25 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
                   New Interaction
                 </Link>
               )}
+              <Link
+                href={`/client/${id}/edit`}
+                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium inline-flex items-center justify-center text-sm"
+              >
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                Edit Intake
+              </Link>
               <ExitProgramButton
                 personId={person.id}
                 personName={`${person.first_name} ${person.last_name}`}
