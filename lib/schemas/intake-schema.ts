@@ -145,6 +145,22 @@ export const REFERRAL_SOURCES = [
   'Other',
 ] as const
 
+// Team members for case manager dropdown
+export const TEAM_MEMBERS = [
+  'Alex',
+  'Marsha',
+  'Cindy',
+  'Vanessa',
+  'Angel',
+  'Khaliha',
+  'Carolina',
+  'Sebastian',
+  'Ian',
+  'Kaylyn',
+  'Deborah',
+  'Kenny',
+] as const
+
 export const TIME_HOMELESS_OPTIONS = [
   'Less than 1 month',
   '1-3 months',

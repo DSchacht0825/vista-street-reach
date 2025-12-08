@@ -15,6 +15,7 @@ import {
   REFERRAL_SOURCES,
   TIME_HOMELESS_OPTIONS,
   ADDICTION_OPTIONS,
+  TEAM_MEMBERS,
 } from '@/lib/schemas/intake-schema'
 import { checkForDuplicates, SimilarPerson } from '@/lib/utils/duplicate-detection'
 import DuplicateWarningModal from './DuplicateWarningModal'
@@ -742,11 +743,17 @@ export default function IntakeForm() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Case Manager
               </label>
-              <input
+              <select
                 {...register('case_manager')}
-                type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option value="">Select case manager...</option>
+                {TEAM_MEMBERS.map((member) => (
+                  <option key={member} value={member}>
+                    {member}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
