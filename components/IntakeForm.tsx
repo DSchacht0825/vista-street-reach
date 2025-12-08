@@ -30,8 +30,6 @@ export default function IntakeForm() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
-  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
-  const [isCameraActive, setIsCameraActive] = useState(false)
 
   // Get current date in local timezone (not UTC)
   const getLocalDateString = () => {
@@ -85,58 +83,11 @@ export default function IntakeForm() {
     }
   }
 
-  // Start camera
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      if (videoElement) {
-        videoElement.srcObject = stream
-        videoElement.play()
-        setIsCameraActive(true)
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error)
-      alert('Unable to access camera. Please check permissions or use file upload.')
-    }
-  }
-
-  // Stop camera
-  const stopCamera = () => {
-    if (videoElement?.srcObject) {
-      const stream = videoElement.srcObject as MediaStream
-      stream.getTracks().forEach(track => track.stop())
-      videoElement.srcObject = null
-      setIsCameraActive(false)
-    }
-  }
-
-  // Capture photo from camera
-  const capturePhoto = () => {
-    if (videoElement) {
-      const canvas = document.createElement('canvas')
-      canvas.width = videoElement.videoWidth
-      canvas.height = videoElement.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.drawImage(videoElement, 0, 0)
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'client-photo.jpg', { type: 'image/jpeg' })
-            setPhotoFile(file)
-            setPhotoPreview(canvas.toDataURL('image/jpeg'))
-            stopCamera()
-          }
-        }, 'image/jpeg', 0.8)
-      }
-    }
-  }
-
   // Remove photo
   const removePhoto = () => {
     setPhotoFile(null)
     setPhotoPreview(null)
     setValue('photo_url', null)
-    stopCamera()
   }
 
   // Upload photo to Supabase storage
@@ -311,58 +262,22 @@ export default function IntakeForm() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Client Photo</h2>
           <div className="space-y-4">
-            {!photoPreview && !isCameraActive && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  type="button"
-                  onClick={startCamera}
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
+            {!photoPreview && (
+              <div className="flex justify-center">
+                <label className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 cursor-pointer">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  Take Photo
-                </button>
-                <label className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Upload Photo
+                  Take or Upload Photo
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={handleFileChange}
                     className="hidden"
                   />
                 </label>
-              </div>
-            )}
-
-            {isCameraActive && (
-              <div className="space-y-4">
-                <video
-                  ref={setVideoElement}
-                  className="w-full max-w-md mx-auto rounded-lg border-2 border-gray-300"
-                  autoPlay
-                  playsInline
-                />
-                <div className="flex gap-4 justify-center">
-                  <button
-                    type="button"
-                    onClick={capturePhoto}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Capture
-                  </button>
-                  <button
-                    type="button"
-                    onClick={stopCamera}
-                    className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
             )}
 
