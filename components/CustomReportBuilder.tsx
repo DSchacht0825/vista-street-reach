@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { exportToCSV } from '@/lib/utils/export-csv'
 import { EXIT_DESTINATIONS } from '@/lib/schemas/exit-schema'
+import { OUTREACH_WORKERS } from '@/lib/schemas/encounter-schema'
 
 interface Person {
   id: string  // UUID from database
@@ -84,6 +85,7 @@ interface GeneratedReport {
     dateRange: string
     startDate: string
     endDate: string
+    workerFilter: string
   }
   metrics: {
     clientsServed: number
@@ -187,6 +189,7 @@ export default function CustomReportBuilder({
   const [filterDisabledOnly, setFilterDisabledOnly] = useState(false)
   const [filterChronicHomeless, setFilterChronicHomeless] = useState(false)
   const [filterAgeRange, setFilterAgeRange] = useState('')
+  const [filterByWorker, setFilterByWorker] = useState('')
 
   const handleGenerate = () => {
     setIsGenerating(true)
@@ -238,6 +241,11 @@ export default function CustomReportBuilder({
           const localDate = getLocalDateString(e.service_date)
           return localDate <= endDate
         })
+      }
+
+      // Filter by outreach worker if specified
+      if (filterByWorker) {
+        filteredEncounters = filteredEncounters.filter(e => e.outreach_worker === filterByWorker)
       }
 
       // Get unique person IDs from filtered encounters
@@ -1035,6 +1043,7 @@ export default function CustomReportBuilder({
           dateRange: dateRangeText,
           startDate,
           endDate,
+          workerFilter: filterByWorker,
         },
         metrics: {
           clientsServed,
@@ -1159,6 +1168,28 @@ export default function CustomReportBuilder({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Worker Filter */}
+      <div className="bg-white rounded-lg p-4 mb-4">
+        <h4 className="font-semibold text-gray-800 mb-3">Filter by Outreach Worker</h4>
+        <div>
+          <select
+            value={filterByWorker}
+            onChange={(e) => setFilterByWorker(e.target.value)}
+            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">All Workers</option>
+            {OUTREACH_WORKERS.map((worker) => (
+              <option key={worker} value={worker}>
+                {worker}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Filter report data to show only interactions from a specific outreach worker
+          </p>
         </div>
       </div>
 
@@ -1567,6 +1598,11 @@ export default function CustomReportBuilder({
                   <p className="text-sm text-gray-600">
                     Date Range: {generatedReport.metadata.dateRange}
                   </p>
+                  {generatedReport.metadata.workerFilter && (
+                    <p className="text-sm text-gray-600">
+                      Worker: {generatedReport.metadata.workerFilter}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowReportModal(false)}
