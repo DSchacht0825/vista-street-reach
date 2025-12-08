@@ -443,7 +443,7 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
             <input
               {...register('height')}
               type="text"
-              placeholder="e.g., 5'10\""
+              placeholder="e.g., 5'10"
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
