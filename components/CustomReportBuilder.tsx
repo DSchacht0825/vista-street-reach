@@ -54,6 +54,7 @@ interface Encounter {
   placement_made?: boolean
   placement_location?: string | null
   placement_location_other?: string | null
+  placement_detox_name?: string | null
   refused_shelter?: boolean
   shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
@@ -110,11 +111,13 @@ interface GeneratedReport {
     // Special placements
     bridgeHousing: number
     familyReunification: number
+    detoxPlacements: number
   }
   breakdowns: {
     matByProvider: Record<string, number>
     detoxByProvider: Record<string, number>
     placementsByLocation: Record<string, number>
+    detoxByFacility: Record<string, number>
     exitsByCategory: Record<string, { total: number, destinations: Record<string, number> }>
     returnedToActiveDetails: Array<{
       person_id: string
@@ -173,6 +176,7 @@ export default function CustomReportBuilder({
   // Special placements
   const [includeBridgeHousing, setIncludeBridgeHousing] = useState(true)
   const [includeFamilyReunification, setIncludeFamilyReunification] = useState(true)
+  const [includeDetoxPlacements, setIncludeDetoxPlacements] = useState(true)
 
   // Demographic breakdown selections
   const [includeByRace, setIncludeByRace] = useState(false)
@@ -464,6 +468,16 @@ export default function CustomReportBuilder({
       // Calculate special placements
       const bridgeHousing = filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length
       const familyReunification = filteredEncounters.filter(e => e.placement_location === 'Family Reunification').length
+      const detoxPlacements = filteredEncounters.filter(e => e.placement_location === 'Detox').length
+
+      // Detox placements by facility name
+      const detoxByFacility = filteredEncounters
+        .filter(e => e.placement_location === 'Detox' && e.placement_detox_name)
+        .reduce((acc, e) => {
+          const facility = e.placement_detox_name!
+          acc[facility] = (acc[facility] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
 
       // Placement breakdown by location
       const placementsByLocation = filteredEncounters
@@ -710,6 +724,27 @@ export default function CustomReportBuilder({
           'Value': familyReunification,
           'Description': 'Reconnected with family',
         })
+      }
+
+      if (includeDetoxPlacements) {
+        reportData.push({
+          'Metric': 'Detox Placements',
+          'Value': detoxPlacements,
+          'Description': 'Placed in detox facilities',
+        })
+
+        // Add breakdown by facility if there are any
+        if (Object.keys(detoxByFacility).length > 0) {
+          Object.entries(detoxByFacility)
+            .sort(([, a], [, b]) => b - a)
+            .forEach(([facility, count]) => {
+              reportData.push({
+                'Metric': `  - ${facility}`,
+                'Value': count,
+                'Description': 'Detox facility',
+              })
+            })
+        }
       }
 
       if (includeReturnedToActive) {
@@ -1066,11 +1101,13 @@ export default function CustomReportBuilder({
           foodProvided,
           bridgeHousing,
           familyReunification,
+          detoxPlacements,
         },
         breakdowns: {
           matByProvider,
           detoxByProvider,
           placementsByLocation,
+          detoxByFacility,
           exitsByCategory,
           returnedToActiveDetails,
           highUtilizerDetails,
@@ -1375,6 +1412,16 @@ export default function CustomReportBuilder({
               className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 font-medium">👨‍👩‍👧 Family Reunification</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-teal-50 p-2 rounded border border-teal-200">
+            <input
+              type="checkbox"
+              checked={includeDetoxPlacements}
+              onChange={(e) => setIncludeDetoxPlacements(e.target.checked)}
+              className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🏥 Detox Placements</span>
           </label>
 
           <label className="flex items-center space-x-2 cursor-pointer hover:bg-green-50 p-2 rounded border border-green-200">

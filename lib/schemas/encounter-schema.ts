@@ -31,6 +31,7 @@ export const encounterFormSchema = z.object({
   placement_made: z.boolean(),
   placement_location: z.string().optional().nullable(),
   placement_location_other: z.string().optional().nullable(),
+  placement_detox_name: z.string().optional().nullable(),
   refused_shelter: z.boolean(),
   shelter_unavailable: z.boolean(),
 
@@ -84,6 +85,7 @@ export const PLACEMENT_LOCATIONS = [
   'Operation Hope',
   'Bridge Housing',
   'Family Reunification',
+  'Detox',
   'Other',
 ] as const
 

@@ -149,6 +149,7 @@ export default async function DashboardPage({
     placement_made?: boolean
     placement_location?: string | null
     placement_location_other?: string | null
+    placement_detox_name?: string | null
     refused_shelter?: boolean
     shelter_unavailable?: boolean
     high_utilizer_contact?: boolean
@@ -238,7 +239,17 @@ export default async function DashboardPage({
     // Placement breakdown
     bridgeHousing: filteredEncounters.filter(e => e.placement_location === 'Bridge Housing').length,
     familyReunification: filteredEncounters.filter(e => e.placement_location === 'Family Reunification').length,
+    detoxPlacements: filteredEncounters.filter(e => e.placement_location === 'Detox').length,
   }
+
+  // Get detox placement details with facility names
+  const detoxPlacementDetails = filteredEncounters
+    .filter(e => e.placement_location === 'Detox' && e.placement_detox_name)
+    .reduce((acc, e) => {
+      const name = e.placement_detox_name!
+      acc[name] = (acc[name] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
 
   // Demographics breakdown
   const demographics = {
@@ -419,6 +430,7 @@ export default async function DashboardPage({
           matByProvider={matByProvider}
           detoxByProvider={detoxByProvider}
           placementsByLocation={placementsByLocation}
+          detoxPlacementDetails={detoxPlacementDetails}
           locations={locations}
           allPersons={allPersons.map(p => ({
             id: p.id,

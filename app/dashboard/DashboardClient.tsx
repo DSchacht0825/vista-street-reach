@@ -127,6 +127,7 @@ interface DashboardClientProps {
     // Placement breakdown
     bridgeHousing: number
     familyReunification: number
+    detoxPlacements: number
   }
   demographics: {
     byGender: Record<string, number>
@@ -150,6 +151,7 @@ interface DashboardClientProps {
   matByProvider: Record<string, number>
   detoxByProvider: Record<string, number>
   placementsByLocation: Record<string, number>
+  detoxPlacementDetails: Record<string, number>
   locations: Location[]
   allPersons: Person[]
   allEncounters: Encounter[]
@@ -174,6 +176,7 @@ export default function DashboardClient({
   matByProvider,
   detoxByProvider,
   placementsByLocation,
+  detoxPlacementDetails,
   locations,
   allPersons,
   allEncounters,
@@ -377,8 +380,8 @@ export default function DashboardClient({
         </div>
 
         {/* Special Placements Row */}
-        {(metrics.bridgeHousing > 0 || metrics.familyReunification > 0) && (
-          <div className="grid grid-cols-2 gap-4 mt-4">
+        {(metrics.bridgeHousing > 0 || metrics.familyReunification > 0 || metrics.detoxPlacements > 0) && (
+          <div className="grid grid-cols-3 gap-4 mt-4">
             <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-purple-500">
               <p className="text-3xl font-bold text-purple-600">{metrics.bridgeHousing}</p>
               <p className="text-sm text-gray-600 mt-1">Bridge Housing</p>
@@ -389,6 +392,29 @@ export default function DashboardClient({
               <p className="text-3xl font-bold text-pink-600">{metrics.familyReunification}</p>
               <p className="text-sm text-gray-600 mt-1">Family Reunification</p>
               <p className="text-xs text-gray-500">Reconnected with family</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-teal-500">
+              <p className="text-3xl font-bold text-teal-600">{metrics.detoxPlacements}</p>
+              <p className="text-sm text-gray-600 mt-1">Detox Placements</p>
+              <p className="text-xs text-gray-500">Treatment facilities</p>
+            </div>
+          </div>
+        )}
+
+        {/* Detox Placement Details */}
+        {Object.keys(detoxPlacementDetails).length > 0 && (
+          <div className="bg-white rounded-lg shadow p-4 mt-4">
+            <h4 className="text-md font-semibold mb-3 text-teal-700">Detox Placements by Facility</h4>
+            <div className="space-y-2">
+              {Object.entries(detoxPlacementDetails)
+                .sort(([, a], [, b]) => b - a)
+                .map(([facility, count]) => (
+                  <div key={facility} className="flex justify-between items-center bg-teal-50 px-3 py-2 rounded">
+                    <span className="text-gray-700">{facility}</span>
+                    <span className="font-semibold text-teal-600">{count}</span>
+                  </div>
+                ))}
             </div>
           </div>
         )}

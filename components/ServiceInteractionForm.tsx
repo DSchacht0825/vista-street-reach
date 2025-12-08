@@ -111,6 +111,7 @@ export default function ServiceInteractionForm({
           placement_made: data.placement_made,
           placement_location: data.placement_location || null,
           placement_location_other: data.placement_location_other || null,
+          placement_detox_name: data.placement_detox_name || null,
           refused_shelter: data.refused_shelter,
           shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
@@ -521,6 +522,20 @@ export default function ServiceInteractionForm({
                     {...register('placement_location_other')}
                     type="text"
                     placeholder="Specify placement location..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
+                  />
+                </div>
+              )}
+
+              {placementLocation === 'Detox' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Detox Facility Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('placement_detox_name')}
+                    type="text"
+                    placeholder="Enter detox facility name..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                   />
                 </div>
