@@ -64,6 +64,7 @@ interface Encounter {
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
   support_services?: string[]
+  service_subtype?: string | null
 }
 
 interface StatusChange {

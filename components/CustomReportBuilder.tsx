@@ -60,6 +60,7 @@ interface Encounter {
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
   support_services?: string[]
+  service_subtype?: string | null
 }
 
 interface StatusChange {
@@ -118,6 +119,7 @@ interface GeneratedReport {
     detoxByProvider: Record<string, number>
     placementsByLocation: Record<string, number>
     detoxByFacility: Record<string, number>
+    serviceSubtypes: Record<string, number>
     exitsByCategory: Record<string, { total: number, destinations: Record<string, number> }>
     returnedToActiveDetails: Array<{
       person_id: string
@@ -177,6 +179,7 @@ export default function CustomReportBuilder({
   const [includeBridgeHousing, setIncludeBridgeHousing] = useState(true)
   const [includeFamilyReunification, setIncludeFamilyReunification] = useState(true)
   const [includeDetoxPlacements, setIncludeDetoxPlacements] = useState(true)
+  const [includeServiceSubtypes, setIncludeServiceSubtypes] = useState(true)
 
   // Demographic breakdown selections
   const [includeByRace, setIncludeByRace] = useState(false)
@@ -492,6 +495,66 @@ export default function CustomReportBuilder({
           return acc
         }, {} as Record<string, number>)
 
+      // Service subtypes breakdown - derive from existing fields or use stored subtype
+      const serviceSubtypes: Record<string, number> = {}
+      filteredEncounters.forEach(e => {
+        // If service_subtype is stored, use it
+        if (e.service_subtype) {
+          serviceSubtypes[e.service_subtype] = (serviceSubtypes[e.service_subtype] || 0) + 1
+        } else {
+          // Derive subtype from existing fields (for legacy imported data)
+          // Check each subtype based on field values
+          if (e.other_services?.includes('Food/Clothes') || e.support_services?.includes('food_provided')) {
+            serviceSubtypes['Basic Needs (Food, Clothes)'] = (serviceSubtypes['Basic Needs (Food, Clothes)'] || 0) + 1
+          }
+          if (e.placement_location === 'BCNC') {
+            serviceSubtypes['BCNC'] = (serviceSubtypes['BCNC'] || 0) + 1
+          }
+          if (e.placement_location === 'Bridge Housing' || e.placement_location_other?.includes('Bridge')) {
+            serviceSubtypes['Bridge Housing'] = (serviceSubtypes['Bridge Housing'] || 0) + 1
+          }
+          if (e.high_utilizer_contact) {
+            serviceSubtypes['Chronic/High Utilizer'] = (serviceSubtypes['Chronic/High Utilizer'] || 0) + 1
+          }
+          if (e.other_services?.includes('Health appointment') || e.co_occurring_mh_sud) {
+            serviceSubtypes['Health Appointment'] = (serviceSubtypes['Health Appointment'] || 0) + 1
+          }
+          if (e.other_services?.includes('Housing qualification')) {
+            serviceSubtypes['In Process for Housing'] = (serviceSubtypes['In Process for Housing'] || 0) + 1
+          }
+          if (e.shelter_unavailable) {
+            serviceSubtypes['No Shelter Available'] = (serviceSubtypes['No Shelter Available'] || 0) + 1
+          }
+          if (e.other_services?.includes('Phone assessment')) {
+            serviceSubtypes['Phone Assessment'] = (serviceSubtypes['Phone Assessment'] || 0) + 1
+          }
+          if (e.other_services?.includes('Phone assistance')) {
+            serviceSubtypes['Phone Assistance'] = (serviceSubtypes['Phone Assistance'] || 0) + 1
+          }
+          if (e.other_services?.includes('Referral') || e.mat_referral || e.detox_referral) {
+            serviceSubtypes['Referral'] = (serviceSubtypes['Referral'] || 0) + 1
+          }
+          if (e.refused_shelter && !e.shelter_unavailable) {
+            serviceSubtypes['Refused Shelter'] = (serviceSubtypes['Refused Shelter'] || 0) + 1
+          }
+          if (e.other_services?.includes('Relocation')) {
+            serviceSubtypes['Relocate'] = (serviceSubtypes['Relocate'] || 0) + 1
+          }
+          if (e.placement_made && e.placement_location && !['BCNC', 'Bridge Housing', 'Detox'].includes(e.placement_location)) {
+            serviceSubtypes['Shelter'] = (serviceSubtypes['Shelter'] || 0) + 1
+          }
+          if (e.case_management_notes && !e.placement_made && !e.refused_shelter) {
+            serviceSubtypes['Street Case Management'] = (serviceSubtypes['Street Case Management'] || 0) + 1
+          }
+          if (e.transportation_provided) {
+            serviceSubtypes['Transportation'] = (serviceSubtypes['Transportation'] || 0) + 1
+          }
+          if (e.other_services?.includes('ID') || e.other_services?.includes('vital documents') || e.support_services?.includes('birth_certificate') || e.support_services?.includes('ss_card')) {
+            serviceSubtypes['Vital Documents'] = (serviceSubtypes['Vital Documents'] || 0) + 1
+          }
+        }
+      })
+
       // Build custom report data
       const reportData: Record<string, unknown>[] = []
 
@@ -755,6 +818,30 @@ export default function CustomReportBuilder({
           'Value': returnedToActive,
           'Description': 'Previously exited clients who returned',
         })
+      }
+
+      // Service subtypes breakdown
+      if (includeServiceSubtypes && Object.keys(serviceSubtypes).length > 0) {
+        reportData.push({
+          'Metric': '',
+          'Value': '',
+          'Description': '',
+        })
+        reportData.push({
+          'Metric': '=== SERVICE SUBTYPES ===',
+          'Value': '',
+          'Description': '',
+        })
+        // Sort by count descending
+        Object.entries(serviceSubtypes)
+          .sort(([, a], [, b]) => b - a)
+          .forEach(([subtype, count]) => {
+            reportData.push({
+              'Metric': subtype,
+              'Value': count,
+              'Description': '',
+            })
+          })
       }
 
       // Export by-name list if selected
@@ -1110,6 +1197,7 @@ export default function CustomReportBuilder({
           detoxByProvider,
           placementsByLocation,
           detoxByFacility,
+          serviceSubtypes,
           exitsByCategory,
           returnedToActiveDetails,
           highUtilizerDetails,
@@ -1434,6 +1522,16 @@ export default function CustomReportBuilder({
               className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 font-medium">↩️ Returned to Active</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-indigo-50 p-2 rounded border border-indigo-200">
+            <input
+              type="checkbox"
+              checked={includeServiceSubtypes}
+              onChange={(e) => setIncludeServiceSubtypes(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">📋 Service Subtypes</span>
           </label>
 
           <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
@@ -1883,6 +1981,28 @@ export default function CustomReportBuilder({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Service Subtypes Breakdown */}
+          {includeServiceSubtypes && Object.keys(generatedReport.breakdowns.serviceSubtypes).length > 0 && (
+            <div className="mb-8">
+              <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Service Subtypes Breakdown
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.entries(generatedReport.breakdowns.serviceSubtypes)
+                  .sort(([, a], [, b]) => (b as number) - (a as number))
+                  .map(([subtype, count]) => (
+                    <div key={subtype} className="flex justify-between items-center bg-indigo-50 px-4 py-3 rounded-lg border border-indigo-200">
+                      <span className="text-gray-700 font-medium text-sm">{subtype}</span>
+                      <span className="text-xl font-bold text-indigo-600">{count}</span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

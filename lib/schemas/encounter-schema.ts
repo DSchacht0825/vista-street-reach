@@ -6,6 +6,7 @@ export const encounterFormSchema = z.object({
   outreach_location: z.string().min(1, 'Location is required'),
   outreach_worker: z.string().min(1, 'Outreach worker name is required'),
   referral_source: z.string().optional().nullable(),
+  service_subtype: z.string().optional().nullable(),
 
   // GPS coordinates (required, captured automatically)
   latitude: z.number().min(-90).max(90),
@@ -96,4 +97,25 @@ export const SUPPORT_SERVICES = [
   { value: 'food_stamps', label: 'CalFresh/Food Stamps Enrollment' },
   { value: 'medi_cal', label: 'Medi-Cal Enrollment' },
   { value: 'food_provided', label: 'Food/Meals Provided' },
+] as const
+
+// Service subtypes from Vista/Eponic system
+export const SERVICE_SUBTYPES = [
+  'Basic Needs (Food, Clothes)',
+  'BCNC',
+  'Bridge Housing',
+  'Chronic/High Utilizer',
+  'Health Appointment',
+  'In Process for Housing',
+  'No Shelter Available',
+  'Phone Assessment',
+  'Phone Assistance',
+  'Referral',
+  'Refused Services',
+  'Refused Shelter',
+  'Relocate',
+  'Shelter',
+  'Street Case Management',
+  'Transportation',
+  'Vital Documents',
 ] as const
