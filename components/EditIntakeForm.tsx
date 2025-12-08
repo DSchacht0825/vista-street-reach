@@ -225,7 +225,7 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
           referral_source: data.referral_source || null,
           release_of_information: data.release_of_information,
           preferred_language: data.preferred_language || null,
-        })
+        } as never)
         .eq('id', person.id)
 
       if (error) throw error
