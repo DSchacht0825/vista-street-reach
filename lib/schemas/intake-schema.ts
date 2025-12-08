@@ -47,6 +47,7 @@ export const intakeFormSchema = z.object({
   enrollment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional().nullable(),
   case_manager: z.string().optional().nullable(),
   referral_source: z.string().optional().nullable(),
+  referral_source_other: z.string().optional().nullable(),
   release_of_information: z.boolean().optional().default(false),
 })
 
@@ -133,15 +134,9 @@ export const DISABILITY_TYPES = [
 ] as const
 
 export const REFERRAL_SOURCES = [
-  'CRC',
-  'Vista Library',
-  'HOPE',
-  'PD (Police Department)',
-  'Self',
-  'SDRM (San Diego Rescue Mission)',
-  'Healthcare Provider',
-  'Other Organization',
-  'Friend/Family',
+  'Sheriffs',
+  'County',
+  'SDRM',
   'Other',
 ] as const
 

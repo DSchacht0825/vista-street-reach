@@ -306,7 +306,7 @@ export default function ServiceInteractionForm({
             <input
               {...register('service_date')}
               type="date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
             {errors.service_date && (
               <p className="text-red-500 text-sm mt-1">{errors.service_date.message}</p>
@@ -319,7 +319,7 @@ export default function ServiceInteractionForm({
             </label>
             <select
               {...register('outreach_worker')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             >
               <option value="">Select outreach worker</option>
               {OUTREACH_WORKERS.map((worker) => (
@@ -341,7 +341,7 @@ export default function ServiceInteractionForm({
               {...register('outreach_location')}
               type="text"
               placeholder="e.g., Main St & 1st Ave"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
             {errors.outreach_location && (
               <p className="text-red-500 text-sm mt-1">{errors.outreach_location.message}</p>
@@ -354,7 +354,7 @@ export default function ServiceInteractionForm({
             </label>
             <select
               {...register('referral_source')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             >
               <option value="">Select source...</option>
               {REFERRAL_SOURCES.map((source) => (
@@ -377,7 +377,7 @@ export default function ServiceInteractionForm({
               <input
                 {...register('co_occurring_mh_sud')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Co-occurring Mental Health & Substance Use
@@ -390,7 +390,7 @@ export default function ServiceInteractionForm({
                 </label>
                 <select
                   {...register('co_occurring_type')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 >
                   <option value="">Select type...</option>
                   {CO_OCCURRING_TYPES.map((type) => (
@@ -413,7 +413,7 @@ export default function ServiceInteractionForm({
             <input
               {...register('transportation_provided')}
               type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700">
               Transportation Provided
@@ -424,7 +424,7 @@ export default function ServiceInteractionForm({
             <input
               {...register('shower_trailer')}
               type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700">
               Shower Trailer Access
@@ -439,7 +439,7 @@ export default function ServiceInteractionForm({
               {...register('other_services')}
               rows={2}
               placeholder="Describe any other services provided..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
         </div>
@@ -458,7 +458,7 @@ export default function ServiceInteractionForm({
             <input
               {...register('placement_made')}
               type="checkbox"
-              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700 font-medium">
               Placement Made
@@ -473,7 +473,7 @@ export default function ServiceInteractionForm({
                 </label>
                 <select
                   {...register('placement_location')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                 >
                   <option value="">Select location...</option>
                   {PLACEMENT_LOCATIONS.map((location) => (
@@ -493,7 +493,7 @@ export default function ServiceInteractionForm({
                     {...register('placement_location_other')}
                     type="text"
                     placeholder="Specify placement location..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                   />
                 </div>
               )}
@@ -542,7 +542,7 @@ export default function ServiceInteractionForm({
           {...register('case_management_notes')}
           rows={6}
           placeholder="Progress notes, follow-up needed, client goals, barriers, successes..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
         />
       </div>
 

@@ -70,6 +70,7 @@ export default function IntakeForm() {
   const lastName = watch('last_name')
   const dateOfBirth = watch('date_of_birth')
   const disabilityStatus = watch('disability_status')
+  const referralSource = watch('referral_source')
 
   // Handle file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,7 +326,7 @@ export default function IntakeForm() {
               <input
                 {...register('first_name')}
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
               {errors.first_name && (
                 <p className="text-red-500 text-sm mt-1">{errors.first_name.message}</p>
@@ -339,7 +340,7 @@ export default function IntakeForm() {
               <input
                 {...register('middle_name')}
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -350,7 +351,7 @@ export default function IntakeForm() {
               <input
                 {...register('last_name')}
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
               {errors.last_name && (
                 <p className="text-red-500 text-sm mt-1">{errors.last_name.message}</p>
@@ -365,7 +366,7 @@ export default function IntakeForm() {
                 {...register('aka')}
                 type="text"
                 placeholder="e.g., Big Mike, Red"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -378,7 +379,7 @@ export default function IntakeForm() {
                 type="number"
                 min="0"
                 max="120"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -388,7 +389,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('gender')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select gender...</option>
                 {GENDER_OPTIONS.map((option) => (
@@ -405,7 +406,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('ethnicity')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select ethnicity...</option>
                 {ETHNICITY_OPTIONS.map((option) => (
@@ -424,7 +425,7 @@ export default function IntakeForm() {
                 {...register('phone_number')}
                 type="tel"
                 placeholder="(555) 123-4567"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -435,7 +436,7 @@ export default function IntakeForm() {
               <input
                 {...register('date_of_birth')}
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
           </div>
@@ -453,7 +454,7 @@ export default function IntakeForm() {
                 {...register('height')}
                 type="text"
                 placeholder="e.g., 5'10&quot;"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -465,7 +466,7 @@ export default function IntakeForm() {
                 {...register('weight')}
                 type="text"
                 placeholder="e.g., 180 lbs"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -475,7 +476,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('hair_color')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select hair color...</option>
                 {HAIR_COLOR_OPTIONS.map((option) => (
@@ -492,7 +493,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('eye_color')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select eye color...</option>
                 {EYE_COLOR_OPTIONS.map((option) => (
@@ -511,7 +512,7 @@ export default function IntakeForm() {
                 {...register('notes')}
                 rows={3}
                 placeholder="General notes about the client..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
           </div>
@@ -525,7 +526,7 @@ export default function IntakeForm() {
               <input
                 {...register('veteran_status')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Veteran
@@ -537,7 +538,7 @@ export default function IntakeForm() {
                 <input
                   {...register('disability_status')}
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
                   Has Disability
@@ -554,7 +555,7 @@ export default function IntakeForm() {
                         {...register('disability_types')}
                         type="checkbox"
                         value={option}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <label className="ml-2 block text-sm text-gray-700">
                         {option}
@@ -569,7 +570,7 @@ export default function IntakeForm() {
               <input
                 {...register('chronic_homeless')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Chronically Homeless
@@ -580,7 +581,7 @@ export default function IntakeForm() {
               <input
                 {...register('domestic_violence_victim')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Domestic Violence Victim
@@ -591,7 +592,7 @@ export default function IntakeForm() {
               <input
                 {...register('chronic_health')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Chronic Health Condition
@@ -602,7 +603,7 @@ export default function IntakeForm() {
               <input
                 {...register('mental_health')}
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-700">
                 Mental Health Condition
@@ -620,7 +621,7 @@ export default function IntakeForm() {
                       {...register('addictions')}
                       type="checkbox"
                       value={option}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label className="ml-2 block text-sm text-gray-700">
                       {option}
@@ -636,7 +637,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('living_situation')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select living situation...</option>
                 {LIVING_SITUATIONS.map((option) => (
@@ -656,7 +657,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('length_of_time_homeless')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select timeframe...</option>
                 {TIME_HOMELESS_OPTIONS.map((option) => (
@@ -676,7 +677,7 @@ export default function IntakeForm() {
                 type="number"
                 min="0"
                 placeholder="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -688,7 +689,7 @@ export default function IntakeForm() {
                 {...register('income')}
                 type="text"
                 placeholder="e.g., SSI, Employment, None"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
 
@@ -702,7 +703,7 @@ export default function IntakeForm() {
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
               <p className="text-xs text-gray-500 mt-1">Enter amount in dollars (e.g., 1200.00)</p>
             </div>
@@ -715,7 +716,7 @@ export default function IntakeForm() {
                 {...register('support_system')}
                 rows={3}
                 placeholder="Describe family, friends, or community support..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
           </div>
@@ -732,7 +733,7 @@ export default function IntakeForm() {
               <input
                 {...register('enrollment_date')}
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
               {errors.enrollment_date && (
                 <p className="text-red-500 text-sm mt-1">{errors.enrollment_date.message}</p>
@@ -745,7 +746,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('case_manager')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select case manager...</option>
                 {TEAM_MEMBERS.map((member) => (
@@ -762,7 +763,7 @@ export default function IntakeForm() {
               </label>
               <select
                 {...register('referral_source')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               >
                 <option value="">Select referral source...</option>
                 {REFERRAL_SOURCES.map((option) => (
@@ -773,20 +774,31 @@ export default function IntakeForm() {
               </select>
             </div>
 
+            {referralSource === 'Other' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specify Other Referral Source
+                </label>
+                <input
+                  {...register('referral_source_other')}
+                  type="text"
+                  placeholder="Enter referral source..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                />
+              </div>
+            )}
+
             <div className="md:col-span-2">
               <div className="flex items-center">
                 <input
                   {...register('release_of_information')}
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Verbal ROI for Vista Approved
+                  ROI Signed
                 </label>
               </div>
-              <p className="text-sm text-gray-500 mt-1 ml-6">
-                Check if client has given verbal authorization to share information
-              </p>
             </div>
           </div>
         </div>
