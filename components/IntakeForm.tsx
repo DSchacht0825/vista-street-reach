@@ -9,8 +9,6 @@ import {
   LIVING_SITUATIONS,
   GENDER_OPTIONS,
   ETHNICITY_OPTIONS,
-  HAIR_COLOR_OPTIONS,
-  EYE_COLOR_OPTIONS,
   DISABILITY_TYPES,
   REFERRAL_SOURCES,
   TIME_HOMELESS_OPTIONS,
@@ -436,82 +434,6 @@ export default function IntakeForm() {
               <input
                 {...register('date_of_birth')}
                 type="date"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Physical Description Section (Vista-specific) */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Physical Description</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Height
-              </label>
-              <input
-                {...register('height')}
-                type="text"
-                placeholder="e.g., 5'10&quot;"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Weight
-              </label>
-              <input
-                {...register('weight')}
-                type="text"
-                placeholder="e.g., 180 lbs"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Hair Color
-              </label>
-              <select
-                {...register('hair_color')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              >
-                <option value="">Select hair color...</option>
-                {HAIR_COLOR_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Eye Color
-              </label>
-              <select
-                {...register('eye_color')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              >
-                <option value="">Select eye color...</option>
-                {EYE_COLOR_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                {...register('notes')}
-                rows={3}
-                placeholder="General notes about the client..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               />
             </div>
