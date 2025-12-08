@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { unstable_cache } from 'next/cache'
 
 export type UserRole = 'admin' | 'field_worker'
 
@@ -13,40 +14,42 @@ export interface UserProfile {
 }
 
 /**
+ * Check if a user is an admin (cached version)
+ */
+const getCachedUserRole = unstable_cache(
+  async (userId: string): Promise<UserRole | null> => {
+    const adminClient = createAdminClient()
+    const { data: profile, error: profileError } = await adminClient
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (profileError || !profile) {
+      return null
+    }
+
+    return (profile as { role: UserRole }).role
+  },
+  ['user-role'],
+  { revalidate: 60 } // Cache for 60 seconds
+)
+
+/**
  * Check if the current user is an admin
  * @returns true if user is admin, false otherwise
  */
 export async function isAdmin(): Promise<boolean> {
   try {
     const supabase = await createClient()
-
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-    console.log('isAdmin check - user:', user?.id, user?.email, 'error:', userError?.message)
-
     if (userError || !user) {
-      console.log('isAdmin: No user found or auth error')
       return false
     }
 
-    // Use admin client to bypass RLS for role check
-    const adminClient = createAdminClient()
-    const { data: profile, error: profileError } = await adminClient
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    console.log('isAdmin check - profile:', profile, 'error:', profileError?.message)
-
-    if (profileError) {
-      console.error('Profile fetch error in isAdmin:', profileError)
-      return false
-    }
-
-    const isAdminResult = (profile as { role: UserRole } | null)?.role === 'admin'
-    console.log('isAdmin result:', isAdminResult)
-    return isAdminResult
+    const role = await getCachedUserRole(user.id)
+    return role === 'admin'
   } catch (error) {
     console.error('Unexpected error in isAdmin:', error)
     return false
