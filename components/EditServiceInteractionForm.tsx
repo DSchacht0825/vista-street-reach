@@ -108,7 +108,8 @@ export default function EditServiceInteractionForm({
       const { error } = await supabase
         .from('encounters')
         .update({
-          service_date: new Date(data.service_date).toISOString(),
+          // Use Pacific timezone (noon) to avoid date shifting when converting to/from UTC
+          service_date: `${data.service_date}T12:00:00-08:00`,
           outreach_location: data.outreach_location,
           // DO NOT update latitude/longitude - preserve original GPS
           outreach_worker: data.outreach_worker,

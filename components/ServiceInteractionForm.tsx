@@ -94,7 +94,7 @@ export default function ServiceInteractionForm({
       const { error } = await supabase.from('encounters').insert([
         {
           person_id: personId,
-          service_date: new Date(data.service_date).toISOString(),
+          service_date: `${data.service_date}T12:00:00-08:00`,
           outreach_location: data.outreach_location,
           latitude: data.latitude,
           longitude: data.longitude,
