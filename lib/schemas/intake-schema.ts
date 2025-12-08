@@ -150,7 +150,7 @@ export const TEAM_MEMBERS = [
   'Ian Raniey',
   'Kaylyn Jason',
   'Kenneth Tolbert',
-  'Khalia Norman',
+  'Khaliah Norman',
   'Mario Moreno',
   'Marsha Duka',
   'Sebastian De La Torre',
