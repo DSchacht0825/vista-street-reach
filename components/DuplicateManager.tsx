@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { calculateSimilarity } from '@/lib/utils/duplicate-detection'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
@@ -41,6 +42,7 @@ interface DuplicateManagerProps {
 }
 
 export default function DuplicateManager({ persons }: DuplicateManagerProps) {
+  const router = useRouter()
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([])
   const [isScanning, setIsScanning] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -146,8 +148,10 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
 
       alert('Records merged successfully!')
 
-      // Refresh the duplicate list
-      await scanForDuplicates()
+      // Reset UI state and refresh page to get fresh data from server
+      setShowResults(false)
+      setDuplicateGroups([])
+      router.refresh()
     } catch (error) {
       console.error('Error merging duplicates:', error)
       alert('Error merging records. Please try again.')
@@ -183,8 +187,10 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
 
       alert('Record deleted successfully!')
 
-      // Refresh the duplicate list
-      await scanForDuplicates()
+      // Reset UI state and refresh page to get fresh data from server
+      setShowResults(false)
+      setDuplicateGroups([])
+      router.refresh()
     } catch (error) {
       console.error('Error deleting person:', error)
       alert('Error deleting record. Please try again.')
