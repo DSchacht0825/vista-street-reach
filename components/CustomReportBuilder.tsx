@@ -54,6 +54,7 @@ interface Encounter {
   placement_location?: string | null
   placement_location_other?: string | null
   refused_shelter?: boolean
+  shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
 }
@@ -93,6 +94,7 @@ interface GeneratedReport {
     housingPlacements: number
     placementsMade: number
     refusedShelter: number
+    shelterUnavailable: number
     highUtilizerContacts: number
     programExits: number
     returnedToActive: number
@@ -145,6 +147,7 @@ export default function CustomReportBuilder({
   const [includeHousingPlacements, setIncludeHousingPlacements] = useState(true)
   const [includePlacements, setIncludePlacements] = useState(true)
   const [includeRefusedShelter, setIncludeRefusedShelter] = useState(true)
+  const [includeShelterUnavailable, setIncludeShelterUnavailable] = useState(true)
   const [includeHighUtilizerCount, setIncludeHighUtilizerCount] = useState(true)
   const [includeReturnedToActive, setIncludeReturnedToActive] = useState(true)
   const [includeByNameList, setIncludeByNameList] = useState(false)
@@ -421,6 +424,9 @@ export default function CustomReportBuilder({
       // Calculate refused shelter
       const refusedShelter = filteredEncounters.filter(e => e.refused_shelter).length
 
+      // Calculate shelter unavailable
+      const shelterUnavailable = filteredEncounters.filter(e => e.shelter_unavailable).length
+
       // Placement breakdown by location
       const placementsByLocation = filteredEncounters
         .filter(e => e.placement_made)
@@ -599,6 +605,14 @@ export default function CustomReportBuilder({
           'Metric': 'Refused Shelter',
           'Value': refusedShelter,
           'Description': 'Clients who declined shelter placement',
+        })
+      }
+
+      if (includeShelterUnavailable) {
+        reportData.push({
+          'Metric': 'Shelter Unavailable',
+          'Value': shelterUnavailable,
+          'Description': 'No shelter beds were available',
         })
       }
 
@@ -944,6 +958,7 @@ export default function CustomReportBuilder({
           housingPlacements,
           placementsMade,
           refusedShelter,
+          shelterUnavailable,
           highUtilizerContacts,
           programExits,
           returnedToActive,
@@ -1134,6 +1149,16 @@ export default function CustomReportBuilder({
               className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 font-medium">🚫 Refused Shelter</span>
+          </label>
+
+          <label className="flex items-center space-x-2 cursor-pointer hover:bg-orange-50 p-2 rounded border border-orange-200">
+            <input
+              type="checkbox"
+              checked={includeShelterUnavailable}
+              onChange={(e) => setIncludeShelterUnavailable(e.target.checked)}
+              className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700 font-medium">🛏️ Shelter Unavailable</span>
           </label>
 
           <label className="flex items-center space-x-2 cursor-pointer hover:bg-yellow-50 p-2 rounded border border-yellow-200">
@@ -1499,6 +1524,19 @@ export default function CustomReportBuilder({
                   >
                     <p className="text-sm text-gray-600 font-medium">🚫 Refused Shelter</p>
                     <p className="text-3xl font-bold text-red-600 mt-1">{generatedReport.metrics.refusedShelter}</p>
+                    <p className="text-xs text-gray-500 mt-1">Click for details</p>
+                  </div>
+                )}
+                {includeShelterUnavailable && (
+                  <div
+                    onClick={() => {
+                      setDetailModalType('shelterUnavailable')
+                      setShowDetailModal(true)
+                    }}
+                    className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border-2 border-orange-300 cursor-pointer hover:shadow-lg transition-shadow"
+                  >
+                    <p className="text-sm text-gray-600 font-medium">🛏️ Shelter Unavailable</p>
+                    <p className="text-3xl font-bold text-orange-600 mt-1">{generatedReport.metrics.shelterUnavailable}</p>
                     <p className="text-xs text-gray-500 mt-1">Click for details</p>
                   </div>
                 )}
@@ -1947,6 +1985,7 @@ export default function CustomReportBuilder({
                 {detailModalType === 'housingPlacements' && 'Housing Placements Details'}
                 {detailModalType === 'placements' && 'Placements Breakdown'}
                 {detailModalType === 'refusedShelter' && 'Refused Shelter Details'}
+                {detailModalType === 'shelterUnavailable' && 'Shelter Unavailable Details'}
                 {detailModalType === 'returnedToActive' && 'Returned to Active Details'}
                 {detailModalType === 'highUtilizers' && 'High Utilizers Details'}
               </h4>
@@ -2316,6 +2355,51 @@ export default function CustomReportBuilder({
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <p>No refused shelter encounters in this date range.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {detailModalType === 'shelterUnavailable' && (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border-2 border-orange-200 mb-6">
+                    <p className="text-sm text-gray-600 font-medium">Total Shelter Unavailable</p>
+                    <p className="text-4xl font-bold text-orange-600 mt-1">{generatedReport.metrics.shelterUnavailable}</p>
+                    <p className="text-xs text-gray-500 mt-2">Encounters where no shelter beds were available</p>
+                  </div>
+
+                  {generatedReport.filteredEncounters.filter(e => e.shelter_unavailable).length > 0 ? (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-orange-700 text-lg mb-3">Shelter Unavailable Encounters</h5>
+                      <div className="space-y-3">
+                        {generatedReport.filteredEncounters
+                          .filter(e => e.shelter_unavailable)
+                          .map((encounter, index) => {
+                            const person = generatedReport.filteredPersons.find(p => p.id === encounter.person_id)
+                            return (
+                              <div key={index} className="bg-white rounded-lg p-3 border border-orange-100 shadow-sm">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-semibold text-gray-900">
+                                      {person ? `${person.first_name} ${person.last_name}` : 'Unknown'}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                      {new Date(encounter.service_date).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                  <div className="text-right text-sm text-gray-500">
+                                    <p>{encounter.outreach_location}</p>
+                                    <p>{encounter.outreach_worker}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No shelter unavailable encounters in this date range.</p>
                     </div>
                   )}
                 </div>

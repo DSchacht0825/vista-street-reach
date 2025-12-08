@@ -60,6 +60,7 @@ interface Encounter {
   placement_location?: string | null
   placement_location_other?: string | null
   refused_shelter?: boolean
+  shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
 }
@@ -114,6 +115,7 @@ interface DashboardClientProps {
     harmReduction: number
     caseManagement: number
     refusedShelter: number
+    shelterUnavailable: number
     highUtilizer: number
   }
   demographics: {
@@ -307,6 +309,27 @@ export default function DashboardClient({
             <p className="text-3xl font-bold text-orange-600">{metrics.matDetoxReferrals}</p>
             <p className="text-sm text-gray-600 mt-1">Total Referrals</p>
             <p className="text-xs text-gray-500">MAT & Detox combined</p>
+          </div>
+        </div>
+
+        {/* Shelter Status Row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-red-500">
+            <p className="text-3xl font-bold text-red-600">{metrics.refusedShelter}</p>
+            <p className="text-sm text-gray-600 mt-1">Refused Shelter</p>
+            <p className="text-xs text-gray-500">Client declined placement</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-orange-500">
+            <p className="text-3xl font-bold text-orange-600">{metrics.shelterUnavailable}</p>
+            <p className="text-sm text-gray-600 mt-1">Shelter Unavailable</p>
+            <p className="text-xs text-gray-500">No beds available</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-yellow-500">
+            <p className="text-3xl font-bold text-yellow-600">{metrics.highUtilizer}</p>
+            <p className="text-sm text-gray-600 mt-1">High Utilizer</p>
+            <p className="text-xs text-gray-500">Frequent service contacts</p>
           </div>
         </div>
       </div>

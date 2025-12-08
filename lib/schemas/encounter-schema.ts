@@ -29,6 +29,7 @@ export const encounterFormSchema = z.object({
   placement_location: z.string().optional().nullable(),
   placement_location_other: z.string().optional().nullable(),
   refused_shelter: z.boolean(),
+  shelter_unavailable: z.boolean(),
 
   // Case Management
   high_utilizer_contact: z.boolean(),
@@ -78,6 +79,5 @@ export const PLACEMENT_LOCATIONS = [
   'ONC',
   'Solutions for Change',
   'Operation Hope',
-  'Shelter Not Available',
   'Other',
 ] as const

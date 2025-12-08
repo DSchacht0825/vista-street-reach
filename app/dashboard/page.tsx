@@ -146,6 +146,7 @@ export default async function DashboardPage({
     placement_location?: string | null
     placement_location_other?: string | null
     refused_shelter?: boolean
+    shelter_unavailable?: boolean
     high_utilizer_contact?: boolean
     case_management_notes?: string | null
     naloxone_distributed?: boolean
@@ -221,6 +222,7 @@ export default async function DashboardPage({
     harmReduction: filteredEncounters.filter(e => e.harm_reduction_education).length,
     caseManagement: filteredEncounters.filter(e => e.case_management_notes).length,
     refusedShelter: filteredEncounters.filter(e => e.refused_shelter).length,
+    shelterUnavailable: filteredEncounters.filter(e => e.shelter_unavailable).length,
     highUtilizer: filteredEncounters.filter(e => e.high_utilizer_contact).length,
   }
 
@@ -453,6 +455,7 @@ export default async function DashboardPage({
             placement_location: e.placement_location,
             placement_location_other: e.placement_location_other,
             refused_shelter: e.refused_shelter,
+            shelter_unavailable: e.shelter_unavailable,
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
           }))}
@@ -505,6 +508,7 @@ export default async function DashboardPage({
             placement_location: e.placement_location,
             placement_location_other: e.placement_location_other,
             refused_shelter: e.refused_shelter,
+            shelter_unavailable: e.shelter_unavailable,
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
           }))}

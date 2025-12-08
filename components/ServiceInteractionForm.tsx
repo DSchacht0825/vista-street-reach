@@ -46,6 +46,7 @@ export default function ServiceInteractionForm({
       shower_trailer: false,
       placement_made: false,
       refused_shelter: false,
+      shelter_unavailable: false,
       high_utilizer_contact: false,
     },
   })
@@ -107,6 +108,7 @@ export default function ServiceInteractionForm({
           placement_location: data.placement_location || null,
           placement_location_other: data.placement_location_other || null,
           refused_shelter: data.refused_shelter,
+          shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
           case_management_notes: data.case_management_notes || null,
         } as never,
@@ -514,6 +516,22 @@ export default function ServiceInteractionForm({
           </div>
           <p className="text-xs text-gray-500 mt-1 ml-1">
             Check if client declined shelter placement when offered
+          </p>
+
+          <div className="flex items-center mt-4">
+            <label className="flex items-center space-x-2 cursor-pointer bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-lg px-4 py-3 transition-colors w-full">
+              <input
+                {...register('shelter_unavailable')}
+                type="checkbox"
+                className="h-5 w-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-semibold text-orange-900">
+                Shelter Unavailable
+              </span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 mt-1 ml-1">
+            Check if no shelter beds were available
           </p>
         </div>
       </div>
