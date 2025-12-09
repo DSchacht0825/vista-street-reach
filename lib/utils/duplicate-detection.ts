@@ -76,8 +76,9 @@ export async function checkForDuplicates(
       const avgSimilarity = (firstNameSim + lastNameSim) / 2
 
       // Check for match: high name similarity OR same DOB with moderate similarity
+      // Raised threshold from 0.7 to 0.85 to reduce false positives (e.g., Steven/Stanley)
       const hasSameDOB = dateOfBirth && person.date_of_birth && dateOfBirth === person.date_of_birth
-      const isMatch = avgSimilarity > 0.7 || (hasSameDOB && avgSimilarity > 0.5)
+      const isMatch = avgSimilarity > 0.85 || (hasSameDOB && avgSimilarity > 0.6)
 
       if (isMatch) {
         similarPersons.push({
