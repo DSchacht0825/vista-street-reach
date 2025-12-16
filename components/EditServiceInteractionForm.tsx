@@ -40,6 +40,7 @@ interface Encounter {
   shelter_unavailable: boolean
   high_utilizer_contact: boolean
   case_management_notes: string | null
+  follow_up: boolean
   photo_urls: string[] | null
 }
 
@@ -98,6 +99,7 @@ export default function EditServiceInteractionForm({
       shelter_unavailable: encounter.shelter_unavailable,
       high_utilizer_contact: encounter.high_utilizer_contact,
       case_management_notes: encounter.case_management_notes || '',
+      follow_up: encounter.follow_up,
     },
   })
 
@@ -217,6 +219,7 @@ export default function EditServiceInteractionForm({
           shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
           case_management_notes: data.case_management_notes || null,
+          follow_up: data.follow_up,
           photo_urls: allPhotoUrls.length > 0 ? allPhotoUrls : null,
         } as never)
         .eq('id', encounter.id)
@@ -444,6 +447,23 @@ export default function EditServiceInteractionForm({
               placeholder="Describe any other services provided..."
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
+          </div>
+
+          {/* Follow-up Required */}
+          <div className="mt-4">
+            <label className="flex items-center space-x-2 cursor-pointer bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg px-4 py-3 transition-colors">
+              <input
+                {...register('follow_up')}
+                type="checkbox"
+                className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-semibold text-purple-900">
+                Follow-up Required
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-1">
+              Check if this client needs follow-up contact
+            </p>
           </div>
         </div>
       </div>

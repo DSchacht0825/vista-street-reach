@@ -67,6 +67,7 @@ export default async function EditEncounterPage({
     shelter_unavailable: boolean
     high_utilizer_contact: boolean
     case_management_notes: string | null
+    follow_up: boolean
     photo_urls: string[] | null
   }
 

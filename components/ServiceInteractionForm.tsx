@@ -55,6 +55,7 @@ export default function ServiceInteractionForm({
       refused_shelter: false,
       shelter_unavailable: false,
       high_utilizer_contact: false,
+      follow_up: false,
       support_services: [],
     },
   })
@@ -193,6 +194,7 @@ export default function ServiceInteractionForm({
           shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
           case_management_notes: data.case_management_notes || null,
+          follow_up: data.follow_up,
           photo_urls: photoUrls.length > 0 ? photoUrls : null,
         } as never,
       ])
@@ -548,6 +550,23 @@ export default function ServiceInteractionForm({
               placeholder="Describe any other services provided..."
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
+          </div>
+
+          {/* Follow-up Required */}
+          <div className="mt-4">
+            <label className="flex items-center space-x-2 cursor-pointer bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg px-4 py-3 transition-colors">
+              <input
+                {...register('follow_up')}
+                type="checkbox"
+                className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-semibold text-purple-900">
+                Follow-up Required
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-1">
+              Check if this client needs follow-up contact
+            </p>
           </div>
         </div>
       </div>

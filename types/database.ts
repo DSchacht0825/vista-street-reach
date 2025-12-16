@@ -119,6 +119,7 @@ export interface Database {
           high_utilizer_contact: boolean
           case_management_notes: string | null
           photo_urls: string[] | null
+          follow_up: boolean
           created_at: string
           updated_at: string
         }
@@ -145,6 +146,7 @@ export interface Database {
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           photo_urls?: string[] | null
+          follow_up?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -171,6 +173,7 @@ export interface Database {
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           photo_urls?: string[] | null
+          follow_up?: boolean
           created_at?: string
           updated_at?: string
         }

@@ -40,6 +40,9 @@ export const encounterFormSchema = z.object({
   high_utilizer_contact: z.boolean(),
   case_management_notes: z.string().optional().nullable(),
 
+  // Follow-up
+  follow_up: z.boolean(),
+
   // Photos
   photo_urls: z.array(z.string()).optional().nullable(),
 })

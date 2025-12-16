@@ -61,6 +61,7 @@ interface Encounter {
   case_management_notes?: string | null
   support_services?: string[]
   service_subtype?: string | null
+  follow_up?: boolean
   photo_urls?: string[] | null
 }
 
@@ -519,6 +520,9 @@ export default function CustomReportBuilder({
           }
           if (e.high_utilizer_contact) {
             serviceSubtypes['Chronic/High Utilizer'] = (serviceSubtypes['Chronic/High Utilizer'] || 0) + 1
+          }
+          if (e.follow_up) {
+            serviceSubtypes['Follow-up Required'] = (serviceSubtypes['Follow-up Required'] || 0) + 1
           }
           if (e.other_services?.includes('Health appointment') || e.co_occurring_mh_sud) {
             serviceSubtypes['Health Appointment'] = (serviceSubtypes['Health Appointment'] || 0) + 1
@@ -3036,6 +3040,13 @@ export default function CustomReportBuilder({
               {selectedEncounter.high_utilizer_contact && (
                 <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                   <p className="font-bold text-yellow-700">⚠️ High Utilizer Contact</p>
+                </div>
+              )}
+
+              {/* Follow-up Flag */}
+              {selectedEncounter.follow_up && (
+                <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                  <p className="font-bold text-purple-700">📋 Follow-up Required</p>
                 </div>
               )}
             </div>
