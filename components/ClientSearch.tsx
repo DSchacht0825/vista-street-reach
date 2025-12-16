@@ -62,6 +62,9 @@ function isInactive(person: Person): boolean {
 }
 
 export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
+  // Debug log
+  console.log('ClientSearch currentWorkerName:', currentWorkerName)
+
   const [searchTerm, setSearchTerm] = useState('')
   const [allPersons, setAllPersons] = useState<Person[]>([])
   const [myClients, setMyClients] = useState<Person[]>([]) // Clients this worker has interacted with
@@ -224,6 +227,12 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
       // Filter to only clients this worker has interacted with
       const myClientsList = processedPersons.filter(p => p.hasMyInteraction)
       setMyClients(myClientsList)
+
+      // Debug log
+      console.log('My clients count:', myClientsList.length, 'for worker:', currentWorkerName)
+      if (myClientsList.length > 0) {
+        console.log('First 3 my clients:', myClientsList.slice(0, 3).map(p => p.first_name + ' ' + p.last_name))
+      }
 
       // If user has no clients, default to showing all clients
       if (myClientsList.length === 0) {
