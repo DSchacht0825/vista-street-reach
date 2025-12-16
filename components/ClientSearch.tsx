@@ -224,6 +224,11 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
       // Filter to only clients this worker has interacted with
       const myClientsList = processedPersons.filter(p => p.hasMyInteraction)
       setMyClients(myClientsList)
+
+      // If user has no clients, default to showing all clients
+      if (myClientsList.length === 0) {
+        setShowingMyClients(false)
+      }
       // Default filter will be applied by useEffect
     } catch (error) {
       console.error('Error loading persons:', error)
