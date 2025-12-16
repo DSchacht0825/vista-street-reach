@@ -26,7 +26,15 @@ interface Person {
   last_encounter?: {
     service_date: string
     outreach_location: string
+    outreach_worker: string
   }
+  // Track if current worker has interacted with this client
+  hasMyInteraction?: boolean
+  myLastContact?: string | null
+}
+
+interface ClientSearchProps {
+  currentWorkerName: string | null
 }
 
 type TabType = 'active' | 'inactive' | 'exited' | 'all'
@@ -53,19 +61,23 @@ function isInactive(person: Person): boolean {
   return days !== null && days > 90
 }
 
-export default function ClientSearch() {
+export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [allPersons, setAllPersons] = useState<Person[]>([])
+  const [myClients, setMyClients] = useState<Person[]>([]) // Clients this worker has interacted with
   const [filteredPersons, setFilteredPersons] = useState<Person[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('active')
+  const [showingMyClients, setShowingMyClients] = useState(true) // Default to showing only my clients
 
-  // Counts for tabs
-  const activeCount = allPersons.filter(isActive).length
-  const inactiveCount = allPersons.filter(isInactive).length
-  const exitedCount = allPersons.filter(p => p.exit_date).length
-  const totalCount = allPersons.length
+  // Counts for tabs - based on whether showing my clients or all
+  const sourceForCounts = showingMyClients ? myClients : allPersons
+  const activeCount = sourceForCounts.filter(isActive).length
+  const inactiveCount = sourceForCounts.filter(isInactive).length
+  const exitedCount = sourceForCounts.filter(p => p.exit_date).length
+  const totalCount = sourceForCounts.length
+  const myClientsCount = myClients.length
 
   // Load all persons on component mount
   useEffect(() => {
@@ -74,30 +86,36 @@ export default function ClientSearch() {
 
   // Filter persons when search term or tab changes
   useEffect(() => {
-    // First apply tab filter
+    // When searching, always search ALL clients (not just my clients)
+    // When not searching, show only my clients if showingMyClients is true
+    const sourceList = (searchTerm && searchTerm.trim() !== '') ? allPersons : (showingMyClients ? myClients : allPersons)
+
+    // Apply tab filter
     let baseList: Person[]
     switch (activeTab) {
       case 'active':
-        baseList = allPersons.filter(isActive)
+        baseList = sourceList.filter(isActive)
         break
       case 'inactive':
-        baseList = allPersons.filter(isInactive)
+        baseList = sourceList.filter(isInactive)
         break
       case 'exited':
-        baseList = allPersons.filter(p => p.exit_date)
+        baseList = sourceList.filter(p => p.exit_date)
         break
       case 'all':
       default:
-        baseList = allPersons
+        baseList = sourceList
     }
 
     if (!searchTerm || searchTerm.trim() === '') {
-      // Sort by last_contact descending (most recent first)
+      // Sort by myLastContact (for my clients) or last_contact descending (most recent first)
       const sorted = [...baseList].sort((a, b) => {
-        if (!a.last_contact && !b.last_contact) return 0
-        if (!a.last_contact) return 1
-        if (!b.last_contact) return -1
-        return new Date(b.last_contact).getTime() - new Date(a.last_contact).getTime()
+        const dateA = showingMyClients && a.myLastContact ? a.myLastContact : a.last_contact
+        const dateB = showingMyClients && b.myLastContact ? b.myLastContact : b.last_contact
+        if (!dateA && !dateB) return 0
+        if (!dateA) return 1
+        if (!dateB) return -1
+        return new Date(dateB).getTime() - new Date(dateA).getTime()
       })
       setFilteredPersons(sorted.slice(0, 50))
       setIsSearching(false)
@@ -107,7 +125,7 @@ export default function ClientSearch() {
       setFilteredPersons(results.slice(0, 50))
       setIsSearching(false)
     }
-  }, [searchTerm, allPersons, activeTab])
+  }, [searchTerm, allPersons, myClients, activeTab, showingMyClients])
 
   const loadPersons = async () => {
     setIsLoading(true)
@@ -141,7 +159,8 @@ export default function ClientSearch() {
             notes,
             encounters (
               service_date,
-              outreach_location
+              outreach_location,
+              outreach_worker
             )
           `)
           .order('last_contact', { ascending: false, nullsFirst: false })
@@ -174,23 +193,37 @@ export default function ClientSearch() {
         exit_date?: string | null
         exit_destination?: string | null
         notes?: string | null
-        encounters?: Array<{ service_date: string; outreach_location: string }>
+        encounters?: Array<{ service_date: string; outreach_location: string; outreach_worker: string }>
       }
 
       const persons = allPersonsData as PersonWithEncounters[]
 
-      // Process the data to include only the most recent encounter
-      const processedPersons = persons?.map((person) => ({
-        ...person,
-        last_encounter: person.encounters && person.encounters.length > 0
-          ? person.encounters.sort((a, b) =>
-              new Date(b.service_date).getTime() - new Date(a.service_date).getTime()
-            )[0]
-          : undefined,
-        encounters: undefined,
-      })) || []
+      // Process the data to include only the most recent encounter and track if current worker has interacted
+      const processedPersons = persons?.map((person) => {
+        // Find this worker's most recent interaction with this client
+        const myEncounters = person.encounters?.filter(e => e.outreach_worker === currentWorkerName) || []
+        const myMostRecent = myEncounters.length > 0
+          ? myEncounters.sort((a, b) => new Date(b.service_date).getTime() - new Date(a.service_date).getTime())[0]
+          : null
+
+        return {
+          ...person,
+          last_encounter: person.encounters && person.encounters.length > 0
+            ? person.encounters.sort((a, b) =>
+                new Date(b.service_date).getTime() - new Date(a.service_date).getTime()
+              )[0]
+            : undefined,
+          encounters: undefined,
+          hasMyInteraction: myEncounters.length > 0,
+          myLastContact: myMostRecent?.service_date || null,
+        }
+      }) || []
 
       setAllPersons(processedPersons)
+
+      // Filter to only clients this worker has interacted with
+      const myClientsList = processedPersons.filter(p => p.hasMyInteraction)
+      setMyClients(myClientsList)
       // Default filter will be applied by useEffect
     } catch (error) {
       console.error('Error loading persons:', error)
@@ -262,6 +295,30 @@ export default function ClientSearch() {
         )}
       </div>
 
+      {/* My Clients / All Clients Toggle */}
+      {currentWorkerName && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="text-sm font-medium text-blue-800">
+              {showingMyClients ? `My Clients (${myClientsCount})` : `All Clients (${allPersons.length})`}
+            </span>
+          </div>
+          <button
+            onClick={() => setShowingMyClients(!showingMyClients)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              showingMyClients
+                ? 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-100'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {showingMyClients ? 'Show All Clients' : 'Show My Clients'}
+          </button>
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
         {(['active', 'inactive', 'exited', 'all'] as TabType[]).map((tab) => (
@@ -291,7 +348,9 @@ export default function ClientSearch() {
           {isLoading
             ? 'Loading...'
             : isSearching
-            ? 'Searching...'
+            ? 'Searching all clients...'
+            : searchTerm
+            ? `Found ${filteredPersons.length} clients (searching all)`
             : `Showing ${filteredPersons.length} clients`}
         </span>
         <Link

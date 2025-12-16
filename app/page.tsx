@@ -2,10 +2,12 @@ import ClientSearch from '@/components/ClientSearch'
 import Image from 'next/image'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
-import { isAdmin } from '@/lib/utils/auth'
+import { isAdmin, getUserProfile } from '@/lib/utils/auth'
 
 export default async function Home() {
   const userIsAdmin = await isAdmin()
+  const userProfile = await getUserProfile()
+  const currentWorkerName = userProfile?.full_name || null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,7 +62,7 @@ export default async function Home() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ClientSearch />
+        <ClientSearch currentWorkerName={currentWorkerName} />
       </div>
     </div>
   )
