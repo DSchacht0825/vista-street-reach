@@ -67,6 +67,7 @@ export default async function EditEncounterPage({
     shelter_unavailable: boolean
     high_utilizer_contact: boolean
     case_management_notes: string | null
+    photo_urls: string[] | null
   }
 
   const personName = `${person.first_name} ${person.last_name || ''}`.trim()

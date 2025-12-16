@@ -39,6 +39,9 @@ export const encounterFormSchema = z.object({
   // Case Management
   high_utilizer_contact: z.boolean(),
   case_management_notes: z.string().optional().nullable(),
+
+  // Photos
+  photo_urls: z.array(z.string()).optional().nullable(),
 })
 
 export type EncounterFormData = z.infer<typeof encounterFormSchema>

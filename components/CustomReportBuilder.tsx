@@ -61,6 +61,7 @@ interface Encounter {
   case_management_notes?: string | null
   support_services?: string[]
   service_subtype?: string | null
+  photo_urls?: string[] | null
 }
 
 interface StatusChange {
@@ -2996,6 +2997,38 @@ export default function CustomReportBuilder({
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <h5 className="font-semibold text-gray-700 mb-2">Case Management Notes</h5>
                   <p className="text-gray-700 whitespace-pre-wrap">{selectedEncounter.case_management_notes}</p>
+                </div>
+              )}
+
+              {/* Photos */}
+              {selectedEncounter.photo_urls && selectedEncounter.photo_urls.length > 0 && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-700 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Photos ({selectedEncounter.photo_urls.length})
+                  </h5>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {selectedEncounter.photo_urls.map((url, index) => (
+                      <a
+                        key={index}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Encounter photo ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Click a photo to view full size</p>
                 </div>
               )}
 

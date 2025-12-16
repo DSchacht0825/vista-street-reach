@@ -32,6 +32,11 @@ export default function ServiceInteractionForm({
   const [manualLocation, setManualLocation] = useState<{ lat: number; lng: number } | null>(null)
   const { latitude, longitude, accuracy, error: gpsError, loading: gpsLoading, refreshLocation } = useGeolocation()
 
+  // Photo capture state
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false)
+
   const {
     register,
     handleSubmit,
@@ -80,6 +85,75 @@ export default function ServiceInteractionForm({
   const currentLongitude = manualLocation?.lng ?? longitude
   const isManuallySet = manualLocation !== null
 
+  // Handle photo file selection
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(file => file.type.startsWith('image/'))
+
+    if (validFiles.length > 0) {
+      setPhotoFiles(prev => [...prev, ...validFiles])
+
+      // Create previews for each file
+      validFiles.forEach(file => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setPhotoPreviews(prev => [...prev, reader.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
+    }
+    // Reset input to allow selecting same file again
+    e.target.value = ''
+  }
+
+  // Remove a photo
+  const removePhoto = (index: number) => {
+    setPhotoFiles(prev => prev.filter((_, i) => i !== index))
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Upload a single photo to Supabase storage
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    try {
+      const supabase = createClient()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = fileName
+
+      const { error: uploadError } = await supabase.storage
+        .from('encounter-photos')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError)
+        return null
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('encounter-photos')
+        .getPublicUrl(filePath)
+
+      return publicUrl
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      return null
+    }
+  }
+
+  // Upload all photos and return URLs
+  const uploadAllPhotos = async (): Promise<string[]> => {
+    if (photoFiles.length === 0) return []
+
+    setIsUploadingPhotos(true)
+    try {
+      const uploadPromises = photoFiles.map(file => uploadPhoto(file))
+      const urls = await Promise.all(uploadPromises)
+      return urls.filter((url): url is string => url !== null)
+    } finally {
+      setIsUploadingPhotos(false)
+    }
+  }
+
   const onSubmit = async (data: EncounterFormData) => {
     if (currentLatitude === null || currentLongitude === null) {
       alert('GPS location is required. Please enable location services or manually select a location on the map.')
@@ -90,6 +164,9 @@ export default function ServiceInteractionForm({
     const supabase = createClient()
 
     try {
+      // Upload photos first
+      const photoUrls = await uploadAllPhotos()
+
       // Insert the encounter
       const { error } = await supabase.from('encounters').insert([
         {
@@ -116,6 +193,7 @@ export default function ServiceInteractionForm({
           shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
           case_management_notes: data.case_management_notes || null,
+          photo_urls: photoUrls.length > 0 ? photoUrls : null,
         } as never,
       ])
 
@@ -603,6 +681,67 @@ export default function ServiceInteractionForm({
           placeholder="Progress notes, follow-up needed, client goals, barriers, successes..."
           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
         />
+
+        {/* Photo Capture Section */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-medium text-gray-700 mb-3 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Photos
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Capture photos of injuries, encampments, or other documentation
+          </p>
+
+          {/* Photo capture button */}
+          <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Take Photo
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+          </label>
+
+          {/* Photo previews grid */}
+          {photoPreviews.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+              {photoPreviews.map((preview, index) => (
+                <div key={index} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview}
+                    alt={`Photo ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border-2 border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isUploadingPhotos && (
+            <div className="mt-4 text-center text-gray-600">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 inline-block mr-2"></div>
+              Uploading photos...
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Submit Button */}

@@ -118,6 +118,7 @@ export interface Database {
           refused_shelter: boolean
           high_utilizer_contact: boolean
           case_management_notes: string | null
+          photo_urls: string[] | null
           created_at: string
           updated_at: string
         }
@@ -143,6 +144,7 @@ export interface Database {
           refused_shelter?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
+          photo_urls?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -168,6 +170,7 @@ export interface Database {
           refused_shelter?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
+          photo_urls?: string[] | null
           created_at?: string
           updated_at?: string
         }
