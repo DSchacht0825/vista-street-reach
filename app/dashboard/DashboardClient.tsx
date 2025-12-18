@@ -120,7 +120,8 @@ interface DashboardClientProps {
     refusedShelter: number
     refusedServices: number
     shelterUnavailable: number
-    highUtilizer: number
+    highUtilizerEncounters: number
+    highUtilizerPeople: number
     // Support services
     birthCertificate: number
     ssCard: number
@@ -357,10 +358,25 @@ export default function DashboardClient({
             <p className="text-xs text-gray-500">No beds available</p>
           </div>
 
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-purple-500">
+            <p className="text-3xl font-bold text-purple-600">{demographics.chronicallyHomeless}</p>
+            <p className="text-sm text-gray-600 mt-1">Chronic Homeless</p>
+            <p className="text-xs text-gray-500">From client records</p>
+          </div>
+        </div>
+
+        {/* High Utilizer Row */}
+        <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-yellow-500">
-            <p className="text-3xl font-bold text-yellow-600">{metrics.highUtilizer}</p>
-            <p className="text-sm text-gray-600 mt-1">High Utilizer</p>
-            <p className="text-xs text-gray-500">Frequent service contacts</p>
+            <p className="text-3xl font-bold text-yellow-600">{metrics.highUtilizerPeople}</p>
+            <p className="text-sm text-gray-600 mt-1">High Utilizer People</p>
+            <p className="text-xs text-gray-500">Unique individuals</p>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-yellow-300">
+            <p className="text-3xl font-bold text-yellow-500">{metrics.highUtilizerEncounters}</p>
+            <p className="text-sm text-gray-600 mt-1">High Utilizer Encounters</p>
+            <p className="text-xs text-gray-500">Total interactions</p>
           </div>
         </div>
 

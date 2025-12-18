@@ -106,7 +106,8 @@ interface GeneratedReport {
     refusedServices: number
     shelterUnavailable: number
     activeByNameList: number
-    highUtilizerContacts: number
+    highUtilizerPeople: number
+    highUtilizerEncounters: number
     programExits: number
     returnedToActive: number
     // Support services
@@ -345,7 +346,8 @@ export default function CustomReportBuilder({
           .filter(e => e.high_utilizer_contact)
           .map(e => e.person_id)
       )
-      const highUtilizerContacts = highUtilizerPersonIds.size
+      const highUtilizerPeople = highUtilizerPersonIds.size
+      const highUtilizerEncounters = filteredEncounters.filter(e => e.high_utilizer_contact).length
 
       // Build details for high utilizers with person info and encounter count
       const highUtilizerDetails = Array.from(highUtilizerPersonIds).map(personId => {
@@ -659,7 +661,7 @@ export default function CustomReportBuilder({
       if (includeHighUtilizerCount) {
         reportData.push({
           'Metric': 'High Utilizers',
-          'Value': highUtilizerContacts,
+          'Value': highUtilizerPeople,
           'Description': 'Unique individuals marked as high utilizers',
         })
       }
@@ -1225,7 +1227,8 @@ export default function CustomReportBuilder({
           refusedServices,
           shelterUnavailable,
           activeByNameList,
-          highUtilizerContacts,
+          highUtilizerPeople,
+          highUtilizerEncounters,
           programExits,
           returnedToActive,
           birthCertificate,
@@ -1984,8 +1987,8 @@ export default function CustomReportBuilder({
                     className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border-2 border-yellow-300 cursor-pointer hover:shadow-lg transition-shadow"
                   >
                     <p className="text-sm text-gray-600 font-medium">⚠️ High Utilizers</p>
-                    <p className="text-3xl font-bold text-yellow-600 mt-1">{generatedReport.metrics.highUtilizerContacts}</p>
-                    <p className="text-xs text-gray-500 mt-1">Click for details</p>
+                    <p className="text-3xl font-bold text-yellow-600 mt-1">{generatedReport.metrics.highUtilizerPeople}</p>
+                    <p className="text-xs text-gray-500 mt-1">{generatedReport.metrics.highUtilizerEncounters} encounters • Click for details</p>
                   </div>
                 )}
                 {generatedReport.metrics.programExits > 0 && (
@@ -2911,9 +2914,9 @@ export default function CustomReportBuilder({
               {detailModalType === 'highUtilizers' && (
                 <div className="space-y-4">
                   <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-4 border-2 border-yellow-200 mb-6">
-                    <p className="text-sm text-gray-600 font-medium">Total High Utilizers</p>
-                    <p className="text-4xl font-bold text-yellow-600 mt-1">{generatedReport.metrics.highUtilizerContacts}</p>
-                    <p className="text-xs text-gray-500 mt-2">Unique individuals flagged as high utilizers in this date range</p>
+                    <p className="text-sm text-gray-600 font-medium">High Utilizers</p>
+                    <p className="text-4xl font-bold text-yellow-600 mt-1">{generatedReport.metrics.highUtilizerPeople}</p>
+                    <p className="text-xs text-gray-500 mt-2">Unique people • {generatedReport.metrics.highUtilizerEncounters} total encounters</p>
                   </div>
 
                   {generatedReport.breakdowns.highUtilizerDetails.length > 0 ? (

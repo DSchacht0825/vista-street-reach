@@ -245,7 +245,8 @@ export default async function DashboardPage({
     refusedShelter: filteredEncounters.filter(e => e.refused_shelter).length,
     refusedServices: filteredEncounters.filter(e => e.refused_services).length,
     shelterUnavailable: filteredEncounters.filter(e => e.shelter_unavailable).length,
-    highUtilizer: filteredEncounters.filter(e => e.high_utilizer_contact).length,
+    highUtilizerEncounters: filteredEncounters.filter(e => e.high_utilizer_contact).length,
+    highUtilizerPeople: new Set(filteredEncounters.filter(e => e.high_utilizer_contact).map(e => e.person_id)).size,
     // Support services
     birthCertificate: filteredEncounters.filter(e => e.support_services?.includes('birth_certificate')).length,
     ssCard: filteredEncounters.filter(e => e.support_services?.includes('ss_card')).length,
