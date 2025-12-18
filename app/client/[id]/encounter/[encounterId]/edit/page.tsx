@@ -64,6 +64,7 @@ export default async function EditEncounterPage({
     placement_location_other: string | null
     placement_detox_name: string | null
     refused_shelter: boolean
+    refused_services: boolean
     shelter_unavailable: boolean
     high_utilizer_contact: boolean
     case_management_notes: string | null
