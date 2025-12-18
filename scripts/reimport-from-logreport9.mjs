@@ -189,8 +189,8 @@ function mapSubType(subType) {
     'Transportation': { transportation_provided: true },
     'Phone Assistance': { other_services: 'Phone assistance' },
     'In Process for Housing': { other_services: 'Housing qualification in process' },
-    'Refused Shelter': { refused_shelter: true },
-    'Refused Services': { refused_shelter: true },
+    'Refused Shelter': { refused_shelter: true, refused_services: false },
+    'Refused Services': { refused_services: true, refused_shelter: false },
     'Referral': { other_services: 'Referral provided' },
     'Vital Documents': { other_services: 'ID/vital documents assistance' },
     'BCNC': { placement_made: true, placement_location: 'BCNC' },
@@ -391,6 +391,7 @@ async function importFromLogreport9() {
         placement_location: subTypeFields.placement_location || null,
         placement_location_other: subTypeFields.placement_location_other || null,
         refused_shelter: subTypeFields.refused_shelter || false,
+        refused_services: subTypeFields.refused_services || false,
         high_utilizer_contact: subTypeFields.high_utilizer_contact || false,
         shelter_unavailable: subTypeFields.shelter_unavailable || false,
       }

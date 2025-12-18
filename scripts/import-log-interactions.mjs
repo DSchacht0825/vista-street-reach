@@ -163,12 +163,12 @@ function mapSubType(subType) {
     'Transportation': { transportation_provided: true },
     'Phone Assistance': { other_services: 'Phone assistance' },
     'In the process for qualifying for housing': { other_services: 'Housing qualification in process' },
-    'Refused Shelter': { refused_shelter: true },
+    'Refused Shelter': { refused_shelter: true, refused_services: false },
     'Referral': { other_services: 'Referral provided' },
     'Vital Documents (ID)': { other_services: 'ID/vital documents assistance' },
     'BCNC': { placement_made: true, placement_location: 'BCNC' },
     'Shelter': { placement_made: true },
-    'Refused Services': { refused_shelter: true },
+    'Refused Services': { refused_services: true, refused_shelter: false },
     'Bridge Housing': { placement_made: true, placement_location: 'Other', placement_location_other: 'Bridge Housing' },
     'Phone Assessment': { other_services: 'Phone assessment' },
     'Relocate': { transportation_provided: true, other_services: 'Relocation assistance' },
@@ -287,6 +287,7 @@ async function importInteractions() {
         placement_location: subTypeFields.placement_location || null,
         placement_location_other: subTypeFields.placement_location_other || null,
         refused_shelter: subTypeFields.refused_shelter || false,
+        refused_services: subTypeFields.refused_services || false,
         high_utilizer_contact: subTypeFields.high_utilizer_contact || false,
       }
 

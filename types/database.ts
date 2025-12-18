@@ -116,6 +116,7 @@ export interface Database {
           placement_location: string | null
           placement_location_other: string | null
           refused_shelter: boolean
+          refused_services: boolean
           high_utilizer_contact: boolean
           case_management_notes: string | null
           photo_urls: string[] | null
@@ -143,6 +144,7 @@ export interface Database {
           placement_location?: string | null
           placement_location_other?: string | null
           refused_shelter?: boolean
+          refused_services?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           photo_urls?: string[] | null
@@ -170,6 +172,7 @@ export interface Database {
           placement_location?: string | null
           placement_location_other?: string | null
           refused_shelter?: boolean
+          refused_services?: boolean
           high_utilizer_contact?: boolean
           case_management_notes?: string | null
           photo_urls?: string[] | null

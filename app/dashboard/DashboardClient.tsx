@@ -60,6 +60,7 @@ interface Encounter {
   placement_location?: string | null
   placement_location_other?: string | null
   refused_shelter?: boolean
+  refused_services?: boolean
   shelter_unavailable?: boolean
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
@@ -117,6 +118,7 @@ interface DashboardClientProps {
     harmReduction: number
     caseManagement: number
     refusedShelter: number
+    refusedServices: number
     shelterUnavailable: number
     highUtilizer: number
     // Support services
@@ -328,11 +330,17 @@ export default function DashboardClient({
         </div>
 
         {/* Shelter Status Row */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-gray-700">
+            <p className="text-3xl font-bold text-gray-700">{metrics.refusedServices}</p>
+            <p className="text-sm text-gray-600 mt-1">Refused Services</p>
+            <p className="text-xs text-gray-500">Client refused all help</p>
+          </div>
+
           <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-red-500">
             <p className="text-3xl font-bold text-red-600">{metrics.refusedShelter}</p>
             <p className="text-sm text-gray-600 mt-1">Refused Shelter</p>
-            <p className="text-xs text-gray-500">Client declined placement</p>
+            <p className="text-xs text-gray-500">Declined placement only</p>
           </div>
 
           <div className="bg-white rounded-lg p-4 shadow text-center border-l-4 border-orange-500">

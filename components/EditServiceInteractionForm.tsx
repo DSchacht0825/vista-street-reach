@@ -37,6 +37,7 @@ interface Encounter {
   placement_location_other: string | null
   placement_detox_name: string | null
   refused_shelter: boolean
+  refused_services: boolean
   shelter_unavailable: boolean
   high_utilizer_contact: boolean
   case_management_notes: string | null
@@ -96,6 +97,7 @@ export default function EditServiceInteractionForm({
       placement_location_other: encounter.placement_location_other || '',
       placement_detox_name: encounter.placement_detox_name || '',
       refused_shelter: encounter.refused_shelter,
+      refused_services: encounter.refused_services || false,
       shelter_unavailable: encounter.shelter_unavailable,
       high_utilizer_contact: encounter.high_utilizer_contact,
       case_management_notes: encounter.case_management_notes || '',
@@ -216,6 +218,7 @@ export default function EditServiceInteractionForm({
           placement_location_other: data.placement_location_other || null,
           placement_detox_name: data.placement_detox_name || null,
           refused_shelter: data.refused_shelter,
+          refused_services: data.refused_services,
           shelter_unavailable: data.shelter_unavailable,
           high_utilizer_contact: data.high_utilizer_contact,
           case_management_notes: data.case_management_notes || null,
@@ -538,6 +541,22 @@ export default function EditServiceInteractionForm({
           )}
 
           <div className="flex items-center mt-4">
+            <label className="flex items-center space-x-2 cursor-pointer bg-gray-700 hover:bg-gray-800 border-2 border-gray-600 rounded-lg px-4 py-3 transition-colors w-full">
+              <input
+                {...register('refused_services')}
+                type="checkbox"
+                className="h-5 w-5 text-gray-900 focus:ring-gray-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-semibold text-white">
+                Refused Services
+              </span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 mt-1 ml-1">
+            Check if client refused ALL services/help during this encounter
+          </p>
+
+          <div className="flex items-center mt-4">
             <label className="flex items-center space-x-2 cursor-pointer bg-red-50 hover:bg-red-100 border-2 border-red-300 rounded-lg px-4 py-3 transition-colors w-full">
               <input
                 {...register('refused_shelter')}
@@ -550,7 +569,7 @@ export default function EditServiceInteractionForm({
             </label>
           </div>
           <p className="text-xs text-gray-500 mt-1 ml-1">
-            Check if client declined shelter placement when offered
+            Check if client declined shelter placement but accepted other services
           </p>
 
           <div className="flex items-center mt-4">

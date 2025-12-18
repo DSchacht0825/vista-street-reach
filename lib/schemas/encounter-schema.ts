@@ -34,6 +34,7 @@ export const encounterFormSchema = z.object({
   placement_location_other: z.string().optional().nullable(),
   placement_detox_name: z.string().optional().nullable(),
   refused_shelter: z.boolean(),
+  refused_services: z.boolean(),
   shelter_unavailable: z.boolean(),
 
   // Case Management
