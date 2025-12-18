@@ -164,6 +164,7 @@ interface DashboardClientProps {
   statusChanges: StatusChange[]
   activeClients: number
   inactiveClients: number
+  fellOffClients: number
   exitedClients: number
   totalContacts: number
   recentlyContacted: RecentPerson[]
@@ -189,6 +190,7 @@ export default function DashboardClient({
   statusChanges,
   activeClients,
   inactiveClients,
+  fellOffClients,
   exitedClients,
   totalContacts,
   recentlyContacted,
@@ -615,16 +617,21 @@ export default function DashboardClient({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4">Client Status Overview</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{activeClients}</p>
               <p className="text-sm text-gray-600 mt-1">Active</p>
               <p className="text-xs text-gray-500">Last 90 days</p>
             </div>
+            <div className="text-center p-4 bg-red-50 rounded-lg border-2 border-red-200">
+              <p className="text-2xl font-bold text-red-600">{fellOffClients}</p>
+              <p className="text-sm text-gray-600 mt-1">Fell Off</p>
+              <p className="text-xs text-gray-500">Last 90 days</p>
+            </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <p className="text-2xl font-bold text-orange-600">{inactiveClients}</p>
               <p className="text-sm text-gray-600 mt-1">Inactive</p>
-              <p className="text-xs text-gray-500">90+ days</p>
+              <p className="text-xs text-gray-500">90+ days total</p>
             </div>
             <div className="text-center p-4 bg-teal-50 rounded-lg">
               <p className="text-2xl font-bold text-teal-600">{exitedClients}</p>

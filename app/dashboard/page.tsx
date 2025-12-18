@@ -209,10 +209,24 @@ export default async function DashboardPage({
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
   const cutoffDate = ninetyDaysAgo.toISOString().split('T')[0]
 
+  // Calculate 180-day cutoff (for "fell off in last 90 days")
+  const oneEightyDaysAgo = new Date()
+  oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180)
+  const cutoff180Date = oneEightyDaysAgo.toISOString().split('T')[0]
+
   // Separate active and inactive clients (from all clients, not filtered)
   const activeClients = allPersons.filter(p => p.last_contact && p.last_contact >= cutoffDate && !p.exit_date)
   const inactiveClients = allPersons.filter(p => (!p.last_contact || p.last_contact < cutoffDate) && !p.exit_date)
   const exitedClients = allPersons.filter(p => p.exit_date)
+
+  // Clients who fell off in the last 90 days (were active, now inactive)
+  // Last contact between 90-180 days ago
+  const fellOffClients = allPersons.filter(p =>
+    p.last_contact &&
+    p.last_contact < cutoffDate &&
+    p.last_contact >= cutoff180Date &&
+    !p.exit_date
+  )
 
   // Calculate metrics
   const metrics = {
@@ -548,6 +562,7 @@ export default async function DashboardPage({
           statusChanges={statusChanges}
           activeClients={activeClients.length}
           inactiveClients={inactiveClients.length}
+          fellOffClients={fellOffClients.length}
           exitedClients={exitedClients.length}
           totalContacts={totalContacts}
           recentlyContacted={recentlyContacted.map(p => ({
