@@ -28,6 +28,7 @@ interface Person {
   exit_date?: string | null
   exit_destination?: string | null
   exit_notes?: string | null
+  last_contact?: string | null
 }
 
 interface Encounter {
