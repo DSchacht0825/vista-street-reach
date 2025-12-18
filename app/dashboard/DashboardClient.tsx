@@ -294,10 +294,16 @@ export default function DashboardClient({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="bg-white rounded-lg p-4 shadow text-center border-2 border-green-500">
+            <p className="text-3xl font-bold text-green-700">{activeClients}</p>
+            <p className="text-sm font-semibold text-green-800 mt-1">Active By-Name List</p>
+            <p className="text-xs text-gray-500">Contacted in last 90 days</p>
+          </div>
+
           <div className="bg-white rounded-lg p-4 shadow text-center">
             <p className="text-3xl font-bold text-blue-600">{metrics.unduplicatedIndividuals}</p>
             <p className="text-sm text-gray-600 mt-1">Clients Served</p>
-            <p className="text-xs text-gray-500">Unduplicated individuals</p>
+            <p className="text-xs text-gray-500">In date range</p>
           </div>
 
           <div className="bg-white rounded-lg p-4 shadow text-center">
