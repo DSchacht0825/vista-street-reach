@@ -70,7 +70,7 @@ export default function ExitProgramModal({
         } as never)
 
       if (statusError) {
-        throw new Error(`Failed to log status change: ${statusError.message}`)
+        throw new Error(`Failed to log status change (personId: ${personId}): ${statusError.message}`)
       }
 
       // Then update the person record
