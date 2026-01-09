@@ -66,7 +66,7 @@ export default function ExitProgramModal({
           change_date: exitDate,
           exit_destination: data.exit_destination,
           notes: data.exit_notes || null,
-          created_by: user?.email || 'Unknown',
+          created_by: user?.id || null,
         } as never)
 
       if (statusError) {

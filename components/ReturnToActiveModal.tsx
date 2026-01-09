@@ -67,10 +67,12 @@ export default function ReturnToActiveModal({
           change_type: 'return_to_active',
           change_date: data.return_date,
           notes: data.notes || null,
-          created_by: user?.email || 'Unknown',
+          created_by: user?.id || null,
         } as never)
 
-      if (statusError) throw statusError
+      if (statusError) {
+        throw new Error(`Failed to log status change: ${statusError.message}`)
+      }
 
       // Then, clear the exit fields on the person record
       const { error: personError } = await supabase
@@ -82,14 +84,17 @@ export default function ReturnToActiveModal({
         } as never)
         .eq('id', personId)
 
-      if (personError) throw personError
+      if (personError) {
+        throw new Error(`Failed to update person record: ${personError.message}`)
+      }
 
       reset()
       onSuccess()
       onClose()
     } catch (error) {
       console.error('Error returning client to active:', error)
-      alert('Error returning client to active. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`Error returning client to active: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
