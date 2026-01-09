@@ -69,7 +69,9 @@ export default function ExitProgramModal({
           created_by: user?.email || 'Unknown',
         } as never)
 
-      if (statusError) throw statusError
+      if (statusError) {
+        throw new Error(`Failed to log status change: ${statusError.message}`)
+      }
 
       // Then update the person record
       const { error } = await supabase
@@ -81,14 +83,17 @@ export default function ExitProgramModal({
         } as never)
         .eq('id', personId)
 
-      if (error) throw error
+      if (error) {
+        throw new Error(`Failed to update person record: ${error.message}`)
+      }
 
       reset()
       onSuccess()
       onClose()
     } catch (error) {
       console.error('Error exiting client from program:', error)
-      alert('Error exiting client from program. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`Error exiting client from program: ${errorMessage}`)
     } finally {
       setIsSubmitting(false)
     }
