@@ -69,6 +69,7 @@ export const OUTREACH_WORKERS = [
   'Cindy Ibanez',
   'Deborah Grinstaff',
   'Ian Rainey',
+  'James Francisco',
   'Kaylyn Jason',
   'Kenneth Tolbert',
   'Khaliah Norman',
