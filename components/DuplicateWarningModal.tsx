@@ -92,11 +92,13 @@ export default function DuplicateWarningModal({
                           <span className="font-medium">Client ID:</span>{' '}
                           {person.client_id}
                         </p>
-                        <p>
-                          <span className="font-medium">DOB:</span>{' '}
-                          {format(new Date(person.date_of_birth), 'MM/dd/yyyy')}{' '}
-                          (Age: {calculateAge(person.date_of_birth)})
-                        </p>
+                        {person.date_of_birth && (
+                          <p>
+                            <span className="font-medium">DOB:</span>{' '}
+                            {format(new Date(person.date_of_birth), 'MM/dd/yyyy')}{' '}
+                            (Age: {calculateAge(person.date_of_birth)})
+                          </p>
+                        )}
                         {person.last_encounter_date && (
                           <p>
                             <span className="font-medium">Last seen:</span>{' '}
