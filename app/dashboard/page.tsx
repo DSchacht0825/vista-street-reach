@@ -214,18 +214,44 @@ export default async function DashboardPage({
   oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180)
   const cutoff180Date = oneEightyDaysAgo.toISOString().split('T')[0]
 
+  // Living situations that indicate someone is sheltered (should NOT be on by-name list)
+  const SHELTERED_SITUATIONS = [
+    'Emergency shelter',
+    'Transitional housing',
+    'Safe Haven',
+    'Hotel/motel paid by organization',
+    'Staying with family/friends (permanent)',
+  ]
+
+  // Helper to check if person is unsheltered
+  const isUnsheltered = (livingSituation: string | null | undefined): boolean => {
+    if (!livingSituation) return true // Unknown defaults to included
+    return !SHELTERED_SITUATIONS.includes(livingSituation)
+  }
+
   // Separate active and inactive clients (from all clients, not filtered)
-  const activeClients = allPersons.filter(p => p.last_contact && p.last_contact >= cutoffDate && !p.exit_date)
-  const inactiveClients = allPersons.filter(p => (!p.last_contact || p.last_contact < cutoffDate) && !p.exit_date)
+  // By-name list only includes unsheltered individuals
+  const activeClients = allPersons.filter(p =>
+    p.last_contact &&
+    p.last_contact >= cutoffDate &&
+    !p.exit_date &&
+    isUnsheltered(p.living_situation)
+  )
+  const inactiveClients = allPersons.filter(p =>
+    (!p.last_contact || p.last_contact < cutoffDate) &&
+    !p.exit_date &&
+    isUnsheltered(p.living_situation)
+  )
   const exitedClients = allPersons.filter(p => p.exit_date)
 
   // Clients who fell off in the last 90 days (were active, now inactive)
-  // Last contact between 90-180 days ago
+  // Last contact between 90-180 days ago, unsheltered only
   const fellOffClients = allPersons.filter(p =>
     p.last_contact &&
     p.last_contact < cutoffDate &&
     p.last_contact >= cutoff180Date &&
-    !p.exit_date
+    !p.exit_date &&
+    isUnsheltered(p.living_situation)
   )
 
   // Calculate metrics
