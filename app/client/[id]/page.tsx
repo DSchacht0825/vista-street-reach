@@ -115,6 +115,7 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
     shower_trailer: boolean
     other_services?: string | null
     case_management_notes?: string | null
+    service_types?: string[] | null
   }
 
   const allEncounters = (encounterData || []) as EncounterData[]
@@ -594,6 +595,28 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
                         </div>
                       )}
                     </div>
+
+                    {/* Interaction Types */}
+                    {encounter.service_types && encounter.service_types.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          </svg>
+                          Interaction Types
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {encounter.service_types.map((type, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                            >
+                              {type}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Case Notes */}
                     {encounter.case_management_notes && (

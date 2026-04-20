@@ -6,7 +6,9 @@ export const encounterFormSchema = z.object({
   outreach_location: z.string().min(1, 'Location is required'),
   outreach_worker: z.string().min(1, 'Outreach worker name is required'),
   referral_source: z.string().optional().nullable(),
-  service_subtype: z.string().optional().nullable(),
+
+  // Service types (multi-select for interaction types)
+  service_types: z.array(z.string()).default([]),
 
   // GPS coordinates (required, captured automatically)
   latitude: z.number().min(-90).max(90),

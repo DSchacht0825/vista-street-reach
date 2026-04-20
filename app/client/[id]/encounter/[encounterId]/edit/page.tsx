@@ -58,6 +58,7 @@ export default async function EditEncounterPage({
     transportation_provided: boolean
     shower_trailer: boolean
     support_services: string[] | null
+    service_types: string[] | null
     other_services: string | null
     placement_made: boolean
     placement_location: string | null

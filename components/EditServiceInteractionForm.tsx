@@ -10,6 +10,7 @@ import {
   PLACEMENT_LOCATIONS,
   OUTREACH_WORKERS,
   SUPPORT_SERVICES,
+  SERVICE_SUBTYPES,
 } from '@/lib/schemas/encounter-schema'
 import { REFERRAL_SOURCES } from '@/lib/schemas/intake-schema'
 import { createClient } from '@/lib/supabase/client'
@@ -31,6 +32,7 @@ interface Encounter {
   transportation_provided: boolean
   shower_trailer: boolean
   support_services: string[] | null
+  service_types: string[] | null
   other_services: string | null
   placement_made: boolean
   placement_location: string | null
@@ -91,6 +93,7 @@ export default function EditServiceInteractionForm({
       transportation_provided: encounter.transportation_provided,
       shower_trailer: encounter.shower_trailer,
       support_services: encounter.support_services || [],
+      service_types: encounter.service_types || [],
       other_services: encounter.other_services || '',
       placement_made: encounter.placement_made,
       placement_location: encounter.placement_location || '',
@@ -212,6 +215,7 @@ export default function EditServiceInteractionForm({
           transportation_provided: data.transportation_provided,
           shower_trailer: data.shower_trailer,
           support_services: data.support_services || [],
+          service_types: data.service_types || [],
           other_services: data.other_services || null,
           placement_made: data.placement_made,
           placement_location: data.placement_location || null,
@@ -351,6 +355,34 @@ export default function EditServiceInteractionForm({
               ))}
             </select>
           </div>
+        </div>
+      </div>
+
+      {/* Service/Interaction Types Section */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          Interaction Types
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Select all interaction types that apply to this visit (you can select multiple)
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200">
+          {SERVICE_SUBTYPES.map((type) => (
+            <div key={type} className="flex items-center">
+              <input
+                type="checkbox"
+                value={type}
+                {...register('service_types')}
+                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-700">
+                {type}
+              </label>
+            </div>
+          ))}
         </div>
       </div>
 

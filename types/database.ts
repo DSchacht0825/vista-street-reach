@@ -121,6 +121,7 @@ export interface Database {
           case_management_notes: string | null
           photo_urls: string[] | null
           follow_up: boolean
+          service_types: string[] | null
           created_at: string
           updated_at: string
         }
@@ -149,6 +150,7 @@ export interface Database {
           case_management_notes?: string | null
           photo_urls?: string[] | null
           follow_up?: boolean
+          service_types?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -177,6 +179,7 @@ export interface Database {
           case_management_notes?: string | null
           photo_urls?: string[] | null
           follow_up?: boolean
+          service_types?: string[] | null
           created_at?: string
           updated_at?: string
         }

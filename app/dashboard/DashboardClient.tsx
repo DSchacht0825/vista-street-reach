@@ -65,7 +65,7 @@ interface Encounter {
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
   support_services?: string[]
-  service_subtype?: string | null
+  service_types?: string[]
 }
 
 interface StatusChange {
@@ -153,6 +153,7 @@ interface DashboardClientProps {
     transportation: number
     showerTrailer: number
   }
+  serviceTypeBreakdown: Record<string, number>
   matByProvider: Record<string, number>
   detoxByProvider: Record<string, number>
   placementsByLocation: Record<string, number>
@@ -179,6 +180,7 @@ export default function DashboardClient({
   metrics,
   demographics,
   serviceTypes,
+  serviceTypeBreakdown,
   matByProvider,
   detoxByProvider,
   placementsByLocation,
@@ -570,6 +572,31 @@ export default function DashboardClient({
             <p className="text-sm text-gray-600 mt-1">Shower Trailer</p>
           </div>
         </div>
+
+        {/* Interaction Types Breakdown (from service_types multi-select) */}
+        {Object.keys(serviceTypeBreakdown).length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="text-md font-semibold mb-4 text-indigo-700 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Interaction Types per Encounter
+            </h4>
+            <p className="text-sm text-gray-500 mb-4">
+              Multiple interaction types can be logged per encounter
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Object.entries(serviceTypeBreakdown)
+                .sort(([, a], [, b]) => b - a)
+                .map(([type, count]) => (
+                  <div key={type} className="bg-indigo-50 px-4 py-3 rounded-lg">
+                    <span className="text-gray-700 text-sm">{type}</span>
+                    <span className="float-right font-bold text-indigo-600">{count}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Program Exits Section */}

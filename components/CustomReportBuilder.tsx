@@ -62,7 +62,7 @@ interface Encounter {
   high_utilizer_contact?: boolean
   case_management_notes?: string | null
   support_services?: string[]
-  service_subtype?: string | null
+  service_types?: string[]
   follow_up?: boolean
   photo_urls?: string[] | null
 }
@@ -270,8 +270,9 @@ export default function CustomReportBuilder({
       const personIdsWithEncounters = new Set(filteredEncounters.map(e => e.person_id))
 
       // Get person IDs with exits in the date range
+      // Only include exits if NOT filtering by worker (exits aren't worker-specific)
       const personIdsWithExits = new Set(
-        persons
+        filterByWorker ? [] : persons
           .filter(p => {
             if (!p.exit_date) return false
             const exitDateStr = getPacificDateString(p.exit_date)
@@ -289,6 +290,7 @@ export default function CustomReportBuilder({
 
 
       // Filter persons by demographics AND by whether they have encounters OR exits in the date range
+      // When filtering by worker, only show people that worker actually encountered
       let filteredPersons = persons.filter(p =>
         personIdsWithEncounters.has(p.id) || personIdsWithExits.has(p.id)
       )
@@ -517,12 +519,14 @@ export default function CustomReportBuilder({
           return acc
         }, {} as Record<string, number>)
 
-      // Service subtypes breakdown - derive from existing fields or use stored subtype
+      // Service types breakdown - use stored service_types array or derive from fields
       const serviceSubtypes: Record<string, number> = {}
       filteredEncounters.forEach(e => {
-        // If service_subtype is stored, use it
-        if (e.service_subtype) {
-          serviceSubtypes[e.service_subtype] = (serviceSubtypes[e.service_subtype] || 0) + 1
+        // If service_types array is stored, use it
+        if (e.service_types && e.service_types.length > 0) {
+          e.service_types.forEach(type => {
+            serviceSubtypes[type] = (serviceSubtypes[type] || 0) + 1
+          })
         } else {
           // Derive subtype from existing fields (for legacy imported data)
           // Check each subtype based on field values

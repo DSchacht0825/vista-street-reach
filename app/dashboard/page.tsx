@@ -158,6 +158,7 @@ export default async function DashboardPage({
     naloxone_distributed?: boolean
     naloxone_date?: string | null
     support_services?: string[] | null
+    service_types?: string[] | null
   }
 
   type StatusChange = {
@@ -382,6 +383,16 @@ export default async function DashboardPage({
     placementsByLocation[location] = (placementsByLocation[location] || 0) + 1
   })
 
+  // Service types breakdown (from service_types multi-select array)
+  const serviceTypeBreakdown: Record<string, number> = {}
+  filteredEncounters.forEach(e => {
+    if (e.service_types && Array.isArray(e.service_types)) {
+      e.service_types.forEach(type => {
+        serviceTypeBreakdown[type] = (serviceTypeBreakdown[type] || 0) + 1
+      })
+    }
+  })
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Blue Header Bar */}
@@ -471,6 +482,7 @@ export default async function DashboardPage({
           metrics={metrics}
           demographics={demographics}
           serviceTypes={serviceTypes}
+          serviceTypeBreakdown={serviceTypeBreakdown}
           matByProvider={matByProvider}
           detoxByProvider={detoxByProvider}
           placementsByLocation={placementsByLocation}
@@ -530,6 +542,7 @@ export default async function DashboardPage({
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
             support_services: e.support_services || [],
+            service_types: e.service_types || [],
           }))}
           filteredPersons={filteredPersons.map(p => ({
             id: p.id,
@@ -585,6 +598,7 @@ export default async function DashboardPage({
             high_utilizer_contact: e.high_utilizer_contact,
             case_management_notes: e.case_management_notes,
             support_services: e.support_services || [],
+            service_types: e.service_types || [],
           }))}
           statusChanges={statusChanges}
           activeClients={activeClients.length}
