@@ -2536,10 +2536,23 @@ export default function CustomReportBuilder({
                                 </div>
                               </div>
                               <div className="flex gap-2 mt-2 flex-wrap">
+                                {/* Service Types from multi-select */}
+                                {encounter.service_types?.map((type, i) => (
+                                  <span key={i} className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">{type}</span>
+                                ))}
+                                {/* Support Services */}
+                                {encounter.support_services?.includes('food_provided') && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Food</span>}
+                                {encounter.support_services?.includes('phone_assistance') && <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded">Phone</span>}
+                                {encounter.support_services?.includes('birth_certificate') && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Birth Cert</span>}
+                                {encounter.support_services?.includes('ss_card') && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">SS Card</span>}
+                                {encounter.support_services?.includes('food_stamps') && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">CalFresh</span>}
+                                {encounter.support_services?.includes('medi_cal') && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded">Medi-Cal</span>}
+                                {/* Legacy boolean fields */}
                                 {encounter.mat_referral && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">MAT</span>}
                                 {encounter.detox_referral && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">Detox</span>}
                                 {encounter.fentanyl_test_strips_count && encounter.fentanyl_test_strips_count > 0 && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">{encounter.fentanyl_test_strips_count} strips</span>}
                                 {encounter.transportation_provided && <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">Transport</span>}
+                                {encounter.shower_trailer && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded">Shower</span>}
                                 {encounter.co_occurring_mh_sud && <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded">Co-occurring</span>}
                                 {encounter.placement_made && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Placement</span>}
                               </div>
@@ -3098,6 +3111,44 @@ export default function CustomReportBuilder({
                   </div>
                 )}
               </div>
+
+              {/* Interaction Types (service_types) */}
+              {selectedEncounter.service_types && selectedEncounter.service_types.length > 0 && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                  <h5 className="font-semibold text-indigo-700 mb-3">Interaction Types</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEncounter.service_types.map((type, i) => (
+                      <span key={i} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Support Services */}
+              {selectedEncounter.support_services && selectedEncounter.support_services.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h5 className="font-semibold text-blue-700 mb-3">Support Services</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedEncounter.support_services.map((service, i) => {
+                      const labels: Record<string, string> = {
+                        'food_provided': 'Food/Meals',
+                        'phone_assistance': 'Phone Assistance',
+                        'birth_certificate': 'Birth Certificate',
+                        'ss_card': 'Social Security Card',
+                        'food_stamps': 'CalFresh/Food Stamps',
+                        'medi_cal': 'Medi-Cal',
+                      }
+                      return (
+                        <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                          {labels[service] || service}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Case Management Notes */}
               {selectedEncounter.case_management_notes && (
