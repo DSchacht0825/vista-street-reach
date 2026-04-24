@@ -96,6 +96,7 @@ interface GeneratedReport {
   metrics: {
     clientsServed: number
     totalInteractions: number
+    totalEncounters: number
     fentanylTestStrips: number
     totalReferrals: number
     matReferrals: number
@@ -333,7 +334,30 @@ export default function CustomReportBuilder({
       // Calculate metrics from filtered data
       const clientsServed = filteredPersons.length
 
-      const totalInteractions = filteredEncounters.length
+      // Count total interactions = sum of all services provided across all encounters
+      // Each service type, support service, and boolean service counts as 1 interaction
+      const totalInteractions = filteredEncounters.reduce((sum, e) => {
+        let count = 0
+        // Count service_types (multi-select interaction types)
+        count += (e.service_types?.length || 0)
+        // Count support_services (multi-select)
+        count += (e.support_services?.length || 0)
+        // Count boolean service fields
+        if (e.transportation_provided) count++
+        if (e.shower_trailer) count++
+        if (e.mat_referral) count++
+        if (e.detox_referral) count++
+        if (e.co_occurring_mh_sud) count++
+        if (e.harm_reduction_education) count++
+        if (e.placement_made) count++
+        if (e.high_utilizer_contact) count++
+        if (e.fentanyl_test_strips_count && e.fentanyl_test_strips_count > 0) count++
+        // If no services recorded, count the encounter itself as 1 interaction
+        return sum + (count > 0 ? count : 1)
+      }, 0)
+
+      // Also keep track of encounter count for reference
+      const totalEncounters = filteredEncounters.length
       const fentanylTestStrips = filteredEncounters.reduce(
         (sum, e) => sum + (e.fentanyl_test_strips_count || 0),
         0
@@ -642,7 +666,12 @@ export default function CustomReportBuilder({
         reportData.push({
           'Metric': 'Service Interactions',
           'Value': totalInteractions,
-          'Description': 'Total encounters',
+          'Description': 'Total services provided (all interaction types)',
+        })
+        reportData.push({
+          'Metric': 'Encounters',
+          'Value': totalEncounters,
+          'Description': 'Number of visits/contacts',
         })
       }
 
@@ -1221,6 +1250,7 @@ export default function CustomReportBuilder({
         metrics: {
           clientsServed,
           totalInteractions,
+          totalEncounters,
           fentanylTestStrips,
           totalReferrals,
           matReferrals,
@@ -2504,10 +2534,17 @@ export default function CustomReportBuilder({
               {/* Service Interactions Details */}
               {detailModalType === 'serviceInteractions' && (
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-2 border-green-200 mb-6">
-                    <p className="text-sm text-gray-600 font-medium">Total Service Interactions</p>
-                    <p className="text-4xl font-bold text-green-600 mt-1">{generatedReport.metrics.totalInteractions}</p>
-                    <p className="text-xs text-gray-500 mt-2">Click any encounter to view full details</p>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-2 border-green-200">
+                      <p className="text-sm text-gray-600 font-medium">Total Service Interactions</p>
+                      <p className="text-4xl font-bold text-green-600 mt-1">{generatedReport.metrics.totalInteractions}</p>
+                      <p className="text-xs text-gray-500 mt-2">All services provided</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-200">
+                      <p className="text-sm text-gray-600 font-medium">Encounters</p>
+                      <p className="text-4xl font-bold text-blue-600 mt-1">{generatedReport.metrics.totalEncounters}</p>
+                      <p className="text-xs text-gray-500 mt-2">Number of visits</p>
+                    </div>
                   </div>
 
                   {generatedReport.filteredEncounters.length > 0 ? (
