@@ -27,17 +27,22 @@ interface Person {
     service_date: string
     outreach_location: string
     outreach_worker: string
+    placement_made?: boolean
+    placement_location?: string
   }
   // Track if current worker has interacted with this client
   hasMyInteraction?: boolean
   myLastContact?: string | null
+  // Track current shelter status based on most recent encounter
+  isCurrentlySheltered?: boolean
+  currentPlacementLocation?: string | null
 }
 
 interface ClientSearchProps {
   currentWorkerName: string | null
 }
 
-type TabType = 'active' | 'inactive' | 'exited' | 'all'
+type TabType = 'active' | 'unsheltered' | 'inactive' | 'exited' | 'all'
 
 // Calculate days since last contact
 function getDaysSinceContact(lastContact: string | null): number | null {
@@ -61,6 +66,11 @@ function isInactive(person: Person): boolean {
   return days !== null && days > 90
 }
 
+// Check if person is unsheltered (active AND not currently in shelter)
+function isUnsheltered(person: Person): boolean {
+  return isActive(person) && !person.isCurrentlySheltered
+}
+
 export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [allPersons, setAllPersons] = useState<Person[]>([])
@@ -74,6 +84,7 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
   // Counts for tabs - based on whether showing my clients or all
   const sourceForCounts = showingMyClients ? myClients : allPersons
   const activeCount = sourceForCounts.filter(isActive).length
+  const unshelteredCount = sourceForCounts.filter(isUnsheltered).length
   const inactiveCount = sourceForCounts.filter(isInactive).length
   const exitedCount = sourceForCounts.filter(p => p.exit_date).length
   const totalCount = sourceForCounts.length
@@ -95,6 +106,9 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
     switch (activeTab) {
       case 'active':
         baseList = sourceList.filter(isActive)
+        break
+      case 'unsheltered':
+        baseList = sourceList.filter(isUnsheltered)
         break
       case 'inactive':
         baseList = sourceList.filter(isInactive)
@@ -160,7 +174,9 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
             encounters (
               service_date,
               outreach_location,
-              outreach_worker
+              outreach_worker,
+              placement_made,
+              placement_location
             )
           `)
           .order('last_contact', { ascending: false, nullsFirst: false })
@@ -193,7 +209,13 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
         exit_date?: string | null
         exit_destination?: string | null
         notes?: string | null
-        encounters?: Array<{ service_date: string; outreach_location: string; outreach_worker: string }>
+        encounters?: Array<{
+          service_date: string
+          outreach_location: string
+          outreach_worker: string
+          placement_made?: boolean
+          placement_location?: string
+        }>
       }
 
       const persons = allPersonsData as PersonWithEncounters[]
@@ -206,16 +228,26 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
           ? myEncounters.sort((a, b) => new Date(b.service_date).getTime() - new Date(a.service_date).getTime())[0]
           : null
 
+        // Get the most recent encounter to determine current shelter status
+        const sortedEncounters = person.encounters && person.encounters.length > 0
+          ? [...person.encounters].sort((a, b) =>
+              new Date(b.service_date).getTime() - new Date(a.service_date).getTime()
+            )
+          : []
+        const mostRecentEncounter = sortedEncounters[0]
+
+        // Determine if currently sheltered based on most recent encounter
+        const isCurrentlySheltered = mostRecentEncounter?.placement_made === true
+        const currentPlacementLocation = isCurrentlySheltered ? mostRecentEncounter?.placement_location : null
+
         return {
           ...person,
-          last_encounter: person.encounters && person.encounters.length > 0
-            ? person.encounters.sort((a, b) =>
-                new Date(b.service_date).getTime() - new Date(a.service_date).getTime()
-              )[0]
-            : undefined,
+          last_encounter: mostRecentEncounter || undefined,
           encounters: undefined,
           hasMyInteraction: myEncounters.length > 0,
           myLastContact: myMostRecent?.service_date || null,
+          isCurrentlySheltered,
+          currentPlacementLocation,
         }
       }) || []
 
@@ -242,6 +274,8 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
     switch (tab) {
       case 'active':
         return `Active (${activeCount})`
+      case 'unsheltered':
+        return `Unsheltered (${unshelteredCount})`
       case 'inactive':
         return `Inactive 90+ Days (${inactiveCount})`
       case 'exited':
@@ -326,7 +360,7 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
-        {(['active', 'inactive', 'exited', 'all'] as TabType[]).map((tab) => (
+        {(['active', 'unsheltered', 'inactive', 'exited', 'all'] as TabType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -334,6 +368,8 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
               activeTab === tab
                 ? tab === 'active'
                   ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                  : tab === 'unsheltered'
+                  ? 'bg-orange-100 text-orange-800 border-2 border-orange-300'
                   : tab === 'inactive'
                   ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300'
                   : tab === 'exited'
@@ -396,6 +432,8 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
               ? 'Try a different search term'
               : activeTab === 'active'
               ? 'No clients have been contacted in the last 90 days'
+              : activeTab === 'unsheltered'
+              ? 'No unsheltered clients (all active clients are currently in shelter)'
               : activeTab === 'inactive'
               ? 'No inactive clients'
               : 'Get started by adding a new client'}
@@ -446,6 +484,11 @@ export default function ClientSearch({ currentWorkerName }: ClientSearchProps) {
                       {!person.exit_date && isInactive(person) && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-200 text-yellow-800">
                           Inactive {daysSinceContact}+ days
+                        </span>
+                      )}
+                      {!person.exit_date && isActive(person) && person.isCurrentlySheltered && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-200 text-purple-800">
+                          Sheltered{person.currentPlacementLocation ? ` - ${person.currentPlacementLocation}` : ''}
                         </span>
                       )}
                     </div>

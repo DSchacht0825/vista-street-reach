@@ -39,9 +39,10 @@ interface DuplicateGroup {
 
 interface DuplicateManagerProps {
   persons: Person[]
+  onDataChange?: () => Promise<void>
 }
 
-export default function DuplicateManager({ persons }: DuplicateManagerProps) {
+export default function DuplicateManager({ persons, onDataChange }: DuplicateManagerProps) {
   const router = useRouter()
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([])
   const [isScanning, setIsScanning] = useState(false)
@@ -148,9 +149,12 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
 
       alert('Records merged successfully!')
 
-      // Reset UI state and refresh page to get fresh data from server
+      // Reset UI state and reload fresh data from server
       setShowResults(false)
       setDuplicateGroups([])
+      if (onDataChange) {
+        await onDataChange()
+      }
       router.refresh()
     } catch (error) {
       console.error('Error merging duplicates:', error)
@@ -187,9 +191,12 @@ export default function DuplicateManager({ persons }: DuplicateManagerProps) {
 
       alert('Record deleted successfully!')
 
-      // Reset UI state and refresh page to get fresh data from server
+      // Reset UI state and reload fresh data from server
       setShowResults(false)
       setDuplicateGroups([])
+      if (onDataChange) {
+        await onDataChange()
+      }
       router.refresh()
     } catch (error) {
       console.error('Error deleting person:', error)

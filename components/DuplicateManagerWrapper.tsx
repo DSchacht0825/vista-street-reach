@@ -89,5 +89,5 @@ export default function DuplicateManagerWrapper() {
     )
   }
 
-  return <DuplicateManager persons={persons} />
+  return <DuplicateManager persons={persons} onDataChange={loadPersons} />
 }
