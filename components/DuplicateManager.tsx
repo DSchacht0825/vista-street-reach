@@ -56,6 +56,32 @@ export default function DuplicateManager({ persons, onDataChange }: DuplicateMan
     const supabase = createClient()
 
     try {
+      // Fetch fresh persons data directly from database
+      let allPersonsData: Person[] = []
+      let from = 0
+      const pageSize = 1000
+
+      while (true) {
+        const { data, error } = await supabase
+          .from('persons')
+          .select('id, client_id, first_name, last_name, nickname, aka, date_of_birth, age, gender, race, ethnicity, hair_color, eye_color, height, weight, living_situation, veteran_status, chronic_homeless, enrollment_date, case_manager, last_contact, contact_count')
+          .range(from, from + pageSize - 1)
+
+        if (error) {
+          console.error('Error loading persons:', error)
+          break
+        }
+
+        if (!data || data.length === 0) break
+        allPersonsData = allPersonsData.concat(data as Person[])
+        from += pageSize
+
+        if (from > 50000) break
+      }
+
+      // Filter to only include persons with required fields
+      const freshPersons = allPersonsData.filter(p => p.first_name && p.last_name)
+
       // Get encounter counts for all persons
       const { data: encounters } = await supabase
         .from('encounters')
@@ -73,16 +99,16 @@ export default function DuplicateManager({ persons, onDataChange }: DuplicateMan
       const groups: DuplicateGroup[] = []
       const processed = new Set<string>()
 
-      for (let i = 0; i < persons.length; i++) {
-        if (processed.has(persons[i].id)) continue
+      for (let i = 0; i < freshPersons.length; i++) {
+        if (processed.has(freshPersons[i].id)) continue
 
-        const person1 = persons[i]
+        const person1 = freshPersons[i]
         const potentialMatches: Person[] = [person1]
 
-        for (let j = i + 1; j < persons.length; j++) {
-          if (processed.has(persons[j].id)) continue
+        for (let j = i + 1; j < freshPersons.length; j++) {
+          if (processed.has(freshPersons[j].id)) continue
 
-          const person2 = persons[j]
+          const person2 = freshPersons[j]
 
           // Calculate name similarity
           const firstNameSim = calculateSimilarity(person1.first_name, person2.first_name)
@@ -98,12 +124,12 @@ export default function DuplicateManager({ persons, onDataChange }: DuplicateMan
 
           if (isDuplicate) {
             potentialMatches.push(person2)
-            processed.add(persons[j].id)
+            processed.add(freshPersons[j].id)
           }
         }
 
         if (potentialMatches.length > 1) {
-          processed.add(persons[i].id)
+          processed.add(freshPersons[i].id)
           groups.push({
             persons: potentialMatches,
             similarity_score: 0.9, // Placeholder
