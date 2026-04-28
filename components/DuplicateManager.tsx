@@ -154,37 +154,29 @@ export default function DuplicateManager({ persons, onDataChange }: DuplicateMan
     }
 
     setIsProcessing(true)
-    const supabase = createClient()
 
     try {
-      // Transfer all encounters from deleted person to kept person
-      const { error: updateError } = await supabase
-        .from('encounters')
-        .update({ person_id: keepPersonId } as never)
-        .eq('person_id', deletePersonId)
+      const response = await fetch('/api/persons/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keepPersonId, deletePersonId }),
+      })
 
-      if (updateError) throw updateError
+      const result = await response.json()
 
-      // Delete the duplicate person
-      const { error: deleteError } = await supabase
-        .from('persons')
-        .delete()
-        .eq('id', deletePersonId)
-
-      if (deleteError) throw deleteError
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to merge records')
+      }
 
       alert('Records merged successfully!')
 
-      // Reset UI state and reload fresh data from server
+      // Reset UI state - next scan will fetch fresh data
       setShowResults(false)
       setDuplicateGroups([])
-      if (onDataChange) {
-        await onDataChange()
-      }
       router.refresh()
     } catch (error) {
       console.error('Error merging duplicates:', error)
-      alert('Error merging records. Please try again.')
+      alert(`Error merging records: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsProcessing(false)
     }
@@ -196,37 +188,29 @@ export default function DuplicateManager({ persons, onDataChange }: DuplicateMan
     }
 
     setIsProcessing(true)
-    const supabase = createClient()
 
     try {
-      // Delete encounters first (foreign key constraint)
-      const { error: encountersError } = await supabase
-        .from('encounters')
-        .delete()
-        .eq('person_id', personId)
+      const response = await fetch('/api/persons/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personId }),
+      })
 
-      if (encountersError) throw encountersError
+      const result = await response.json()
 
-      // Delete the person
-      const { error: personError } = await supabase
-        .from('persons')
-        .delete()
-        .eq('id', personId)
-
-      if (personError) throw personError
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete record')
+      }
 
       alert('Record deleted successfully!')
 
-      // Reset UI state and reload fresh data from server
+      // Reset UI state - next scan will fetch fresh data
       setShowResults(false)
       setDuplicateGroups([])
-      if (onDataChange) {
-        await onDataChange()
-      }
       router.refresh()
     } catch (error) {
       console.error('Error deleting person:', error)
-      alert('Error deleting record. Please try again.')
+      alert(`Error deleting record: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsProcessing(false)
     }
