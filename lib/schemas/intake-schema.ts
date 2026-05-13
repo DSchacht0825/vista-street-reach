@@ -149,6 +149,7 @@ export const TEAM_MEMBERS = [
   'Deborah Grinstaff',
   'Ian Raniey',
   'James Francisco',
+  'Jessica Epenesa',
   'Kaylyn Jason',
   'Kenneth Tolbert',
   'Khaliah Norman',
