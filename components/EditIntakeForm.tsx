@@ -14,6 +14,8 @@ import {
   TIME_HOMELESS_OPTIONS,
   ADDICTION_OPTIONS,
   TEAM_MEMBERS,
+  HOW_CAME_TO_VISTA_OPTIONS,
+  TIME_IN_VISTA_OPTIONS,
 } from '@/lib/schemas/intake-schema'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -57,6 +59,8 @@ interface PersonData {
   referral_source?: string | null
   release_of_information: boolean
   preferred_language?: string | null
+  how_came_to_vista?: string | null
+  time_in_vista?: string | null
 }
 
 interface EditIntakeFormProps {
@@ -115,6 +119,8 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
       referral_source: person.referral_source || '',
       release_of_information: person.release_of_information || false,
       preferred_language: person.preferred_language || '',
+      how_came_to_vista: person.how_came_to_vista || '',
+      time_in_vista: person.time_in_vista || '',
     },
   })
 
@@ -225,6 +231,8 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
           referral_source: data.referral_source || null,
           release_of_information: data.release_of_information,
           preferred_language: data.preferred_language || null,
+          how_came_to_vista: data.how_came_to_vista || null,
+          time_in_vista: data.time_in_vista || null,
         } as never)
         .eq('id', person.id)
 
@@ -766,6 +774,40 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
               />
             </div>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              How They Came to Vista
+            </label>
+            <select
+              {...register('how_came_to_vista')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            >
+              <option value="">Select how they came to Vista...</option>
+              {HOW_CAME_TO_VISTA_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              How Long in Vista
+            </label>
+            <select
+              {...register('time_in_vista')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            >
+              <option value="">Select time in Vista...</option>
+              {TIME_IN_VISTA_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="md:col-span-2">
             <div className="flex items-center">

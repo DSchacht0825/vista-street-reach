@@ -14,6 +14,8 @@ import {
   TIME_HOMELESS_OPTIONS,
   ADDICTION_OPTIONS,
   TEAM_MEMBERS,
+  HOW_CAME_TO_VISTA_OPTIONS,
+  TIME_IN_VISTA_OPTIONS,
 } from '@/lib/schemas/intake-schema'
 import { checkForDuplicates, SimilarPerson } from '@/lib/utils/duplicate-detection'
 import DuplicateWarningModal from './DuplicateWarningModal'
@@ -213,6 +215,8 @@ export default function IntakeForm() {
             referral_source: data.referral_source || null,
             release_of_information: data.release_of_information,
             preferred_language: data.preferred_language || null,
+            how_came_to_vista: data.how_came_to_vista || null,
+            time_in_vista: data.time_in_vista || null,
             // Set initial contact tracking
             last_contact: enrollmentDate,
             contact_count: 1,
@@ -709,6 +713,40 @@ export default function IntakeForm() {
                 />
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                How They Came to Vista
+              </label>
+              <select
+                {...register('how_came_to_vista')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              >
+                <option value="">Select how they came to Vista...</option>
+                {HOW_CAME_TO_VISTA_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                How Long in Vista
+              </label>
+              <select
+                {...register('time_in_vista')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              >
+                <option value="">Select time in Vista...</option>
+                {TIME_IN_VISTA_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="md:col-span-2">
               <div className="flex items-center">

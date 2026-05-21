@@ -49,6 +49,8 @@ export const intakeFormSchema = z.object({
   referral_source: z.string().optional().nullable(),
   referral_source_other: z.string().optional().nullable(),
   release_of_information: z.boolean().optional().default(false),
+  how_came_to_vista: z.string().optional().nullable(),
+  time_in_vista: z.string().optional().nullable(),
 })
 
 export type IntakeFormData = z.infer<typeof intakeFormSchema>
@@ -190,4 +192,24 @@ export const ADDICTION_OPTIONS = [
   'Fentanyl',
   'Inhalants',
   'Other',
+] as const
+
+export const HOW_CAME_TO_VISTA_OPTIONS = [
+  'From Vista',
+  'From detention center',
+  'RHAP program',
+  'Neighboring city',
+  'Other local provider not funded by Vista',
+] as const
+
+export const TIME_IN_VISTA_OPTIONS = [
+  'Less than 1 month',
+  '1-3 months',
+  '3-6 months',
+  '6-12 months',
+  '1-2 years',
+  '2-5 years',
+  '5-10 years',
+  'More than 10 years',
+  'Unknown',
 ] as const

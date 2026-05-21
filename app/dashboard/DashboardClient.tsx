@@ -158,6 +158,8 @@ interface DashboardClientProps {
   detoxByProvider: Record<string, number>
   placementsByLocation: Record<string, number>
   detoxPlacementDetails: Record<string, number>
+  howCameToVistaBreakdown: Record<string, number>
+  timeInVistaBreakdown: Record<string, number>
   locations: Location[]
   allPersons: Person[]
   allEncounters: Encounter[]
@@ -185,6 +187,8 @@ export default function DashboardClient({
   detoxByProvider,
   placementsByLocation,
   detoxPlacementDetails,
+  howCameToVistaBreakdown,
+  timeInVistaBreakdown,
   locations,
   allPersons,
   allEncounters,
@@ -524,6 +528,50 @@ export default function DashboardClient({
                   <span className="float-right font-bold text-green-600">{count}</span>
                 </div>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* How Came to Vista Breakdown */}
+      {Object.keys(howCameToVistaBreakdown).length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center mb-4">
+              <svg className="w-6 h-6 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">How Clients Came to Vista</h3>
+            </div>
+            <div className="space-y-2">
+              {Object.entries(howCameToVistaBreakdown)
+                .sort(([, a], [, b]) => b - a)
+                .map(([source, count]) => (
+                  <div key={source} className="flex justify-between items-center bg-indigo-50 px-4 py-3 rounded-lg">
+                    <span className="text-gray-700">{source}</span>
+                    <span className="font-bold text-indigo-600">{count}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center mb-4">
+              <svg className="w-6 h-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">How Long in Vista</h3>
+            </div>
+            <div className="space-y-2">
+              {Object.entries(timeInVistaBreakdown)
+                .sort(([, a], [, b]) => b - a)
+                .map(([time, count]) => (
+                  <div key={time} className="flex justify-between items-center bg-purple-50 px-4 py-3 rounded-lg">
+                    <span className="text-gray-700">{time}</span>
+                    <span className="font-bold text-purple-600">{count}</span>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       )}

@@ -125,6 +125,8 @@ export default async function DashboardPage({
     exit_destination?: string | null
     exit_notes?: string | null
     sexual_orientation?: string | null
+    how_came_to_vista?: string | null
+    time_in_vista?: string | null
   }
 
   type EncounterData = {
@@ -320,6 +322,20 @@ export default async function DashboardPage({
     totalIncome: filteredPersons.reduce((sum, p) => sum + (p.income_amount || 0), 0),
   }
 
+  // How Came to Vista breakdown
+  const howCameToVistaBreakdown = filteredPersons.reduce((acc, p) => {
+    const source = p.how_came_to_vista || 'Not specified'
+    acc[source] = (acc[source] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  // Time in Vista breakdown
+  const timeInVistaBreakdown = filteredPersons.reduce((acc, p) => {
+    const time = p.time_in_vista || 'Not specified'
+    acc[time] = (acc[time] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
   // Locations for heat map - only encounters with GPS data (using Pacific timezone for display)
   const locations = filteredEncounters
     .filter(e => e.latitude && e.longitude)
@@ -487,6 +503,8 @@ export default async function DashboardPage({
           detoxByProvider={detoxByProvider}
           placementsByLocation={placementsByLocation}
           detoxPlacementDetails={detoxPlacementDetails}
+          howCameToVistaBreakdown={howCameToVistaBreakdown}
+          timeInVistaBreakdown={timeInVistaBreakdown}
           locations={locations}
           allPersons={allPersons.map(p => ({
             id: p.id,
