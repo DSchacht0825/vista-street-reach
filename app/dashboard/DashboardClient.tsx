@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
@@ -207,18 +207,31 @@ export default function DashboardClient({
   const [startDate, setStartDate] = useState(initialStartDate)
   const [endDate, setEndDate] = useState(initialEndDate)
   const [showReportBuilder, setShowReportBuilder] = useState(false)
+  const [filterError, setFilterError] = useState('')
+  const [isPending, startTransition] = useTransition()
 
   const handleApplyFilter = () => {
+    if (startDate && endDate && startDate > endDate) {
+      setFilterError('Start date must be on or before the end date.')
+      return
+    }
+    setFilterError('')
     const params = new URLSearchParams()
     if (startDate) params.set('start_date', startDate)
     if (endDate) params.set('end_date', endDate)
-    router.push(`/dashboard?${params.toString()}`)
+    const query = params.toString()
+    startTransition(() => {
+      router.push(query ? `/dashboard?${query}` : '/dashboard')
+    })
   }
 
   const handleClearFilter = () => {
     setStartDate('')
     setEndDate('')
-    router.push('/dashboard')
+    setFilterError('')
+    startTransition(() => {
+      router.push('/dashboard')
+    })
   }
 
   const avgContacts = allPersons.length > 0
@@ -254,19 +267,24 @@ export default function DashboardClient({
           </div>
           <button
             onClick={handleApplyFilter}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={isPending}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-60 disabled:cursor-wait"
           >
-            Apply Filter
+            {isPending ? 'Applying…' : 'Apply Filter'}
           </button>
           {(initialStartDate || initialEndDate) && (
             <button
               onClick={handleClearFilter}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              disabled={isPending}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-60 disabled:cursor-wait"
             >
               Clear
             </button>
           )}
         </div>
+        {filterError && (
+          <p className="mt-3 text-sm text-red-600 font-medium">{filterError}</p>
+        )}
         {dateRangeText && (
           <p className="mt-3 text-sm text-blue-600 font-medium">{dateRangeText}</p>
         )}
