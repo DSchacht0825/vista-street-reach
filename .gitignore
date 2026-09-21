@@ -38,3 +38,7 @@ Thumbs.db
 # Excel data files (sensitive client data)
 public/*.xls
 public/*.xlsx
+
+# Local-only: PII backups and Supabase CLI cache
+scripts/gender-backup-*.json
+supabase/.temp/
