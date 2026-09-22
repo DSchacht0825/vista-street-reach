@@ -403,10 +403,13 @@ export default async function DashboardPage({
   // Service types breakdown (from service_types multi-select array)
   const serviceTypeBreakdown: Record<string, number> = {}
   filteredEncounters.forEach(e => {
-    if (e.service_types && Array.isArray(e.service_types)) {
+    if (e.service_types && Array.isArray(e.service_types) && e.service_types.length > 0) {
       e.service_types.forEach(type => {
         serviceTypeBreakdown[type] = (serviceTypeBreakdown[type] || 0) + 1
       })
+    } else {
+      // Legacy encounters logged before an interaction type was required
+      serviceTypeBreakdown['Not categorized'] = (serviceTypeBreakdown['Not categorized'] || 0) + 1
     }
   })
 

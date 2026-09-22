@@ -205,10 +205,13 @@ export function computeDashboardStats<P extends StatsPerson, E extends StatsEnco
       const location = getPlacementLabel(e)
       placementsByLocation[location] = (placementsByLocation[location] || 0) + 1
     }
-    if (Array.isArray(e.service_types)) {
+    if (Array.isArray(e.service_types) && e.service_types.length > 0) {
       e.service_types.forEach(type => {
         serviceTypeBreakdown[type] = (serviceTypeBreakdown[type] || 0) + 1
       })
+    } else {
+      // Legacy encounters logged before an interaction type was required
+      serviceTypeBreakdown['Not categorized'] = (serviceTypeBreakdown['Not categorized'] || 0) + 1
     }
   })
 

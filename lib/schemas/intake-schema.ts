@@ -1,14 +1,20 @@
 import { z } from 'zod'
 
+// react-hook-form's `valueAsNumber` reads an empty <input type="number"> as NaN, not
+// undefined/null - without this, zod's z.number() rejects NaN and the form fails to
+// submit with no visible error whenever an optional number field is left blank.
+const optionalNumber = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (typeof v === 'number' && Number.isNaN(v) ? undefined : v), schema)
+
 export const intakeFormSchema = z.object({
   // Personal Information - Core Vista Fields
   first_name: z.string().min(1, 'First name is required').max(100),
   middle_name: z.string().max(100).optional().nullable(),
   last_name: z.string().max(100).optional().nullable(),
   aka: z.string().max(200).optional().nullable(), // AKA/Nicknames
-  gender: z.string().optional().nullable(),
-  ethnicity: z.string().optional().nullable(),
-  age: z.number().int().min(0).max(120).optional().nullable(),
+  gender: z.string().min(1, 'Gender is required'),
+  ethnicity: z.string().min(1, 'Ethnicity is required'),
+  age: optionalNumber(z.number().int().min(0).max(120).optional().nullable()),
 
   // Physical Description (Vista-specific)
   height: z.string().max(50).optional().nullable(),
@@ -23,11 +29,11 @@ export const intakeFormSchema = z.object({
   // Optional Extended Fields (for compatibility with Encinitas features)
   phone_number: z.string().optional().nullable(),
   date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').or(z.literal('')).optional().nullable(),
-  race: z.string().optional().nullable(),
+  race: z.string().min(1, 'Race is required'),
   sexual_orientation: z.string().optional().nullable(),
   preferred_language: z.string().optional().nullable(),
 
-  // Status Information (optional)
+  // Status Information (checkboxes: unchecked is a real "No", not "unknown")
   veteran_status: z.boolean().optional().default(false),
   disability_status: z.boolean().optional().default(false),
   disability_types: z.array(z.string()).optional().transform(val => val ?? []),
@@ -36,11 +42,11 @@ export const intakeFormSchema = z.object({
   chronic_health: z.boolean().optional().default(false),
   mental_health: z.boolean().optional().default(false),
   addictions: z.array(z.string()).optional().transform(val => val ?? []),
-  living_situation: z.string().optional().nullable(),
+  living_situation: z.string().min(1, 'Living situation is required'),
   length_of_time_homeless: z.string().optional().nullable(),
-  evictions: z.number().int().min(0).optional().nullable(),
+  evictions: optionalNumber(z.number().int().min(0).optional().nullable()),
   income: z.string().optional().nullable(),
-  income_amount: z.number().min(0).optional().nullable(),
+  income_amount: optionalNumber(z.number().min(0).optional().nullable()),
   support_system: z.string().optional().nullable(),
 
   // Program Information
@@ -111,6 +117,7 @@ export const LIVING_SITUATIONS = [
   'Staying with family/friends (permanent)',
   'Vehicle',
   'Other',
+  'Unknown',
 ] as const
 
 // Race options (for extended form)

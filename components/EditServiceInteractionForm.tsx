@@ -364,10 +364,10 @@ export default function EditServiceInteractionForm({
           <svg className="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          Interaction Types
+          Interaction Types <span className="text-red-500 ml-1">*</span>
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Select all interaction types that apply to this visit (you can select multiple)
+          Select all interaction types that apply to this visit (at least one is required)
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-gray-50 p-4 rounded-md border border-gray-200">
           {SERVICE_SUBTYPES.map((type) => (
@@ -384,6 +384,9 @@ export default function EditServiceInteractionForm({
             </div>
           ))}
         </div>
+        {errors.service_types && (
+          <p className="text-red-500 text-sm mt-2">{errors.service_types.message}</p>
+        )}
       </div>
 
       {/* Mental Health Section */}

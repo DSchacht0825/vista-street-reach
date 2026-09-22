@@ -7,8 +7,9 @@ export const encounterFormSchema = z.object({
   outreach_worker: z.string().min(1, 'Outreach worker name is required'),
   referral_source: z.string().optional().nullable(),
 
-  // Service types (multi-select for interaction types)
-  service_types: z.array(z.string()).default([]),
+  // Service types (multi-select for interaction types) - at least one is required so
+  // every encounter shows up in the "what happened" breakdown, not just the raw count
+  service_types: z.array(z.string()).min(1, 'Select at least one interaction type'),
 
   // GPS coordinates (required, captured automatically)
   latitude: z.number().min(-90).max(90),

@@ -9,6 +9,7 @@ import {
   LIVING_SITUATIONS,
   GENDER_OPTIONS,
   ETHNICITY_OPTIONS,
+  RACE_OPTIONS,
   DISABILITY_TYPES,
   REFERRAL_SOURCES,
   TIME_HOMELESS_OPTIONS,
@@ -383,36 +384,62 @@ export default function EditIntakeForm({ person }: EditIntakeFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gender
+              Gender <span className="text-red-500">*</span>
             </label>
             <select
               {...register('gender')}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             >
-              <option value="">Select gender...</option>
+              <option value="" disabled>Select gender...</option>
               {GENDER_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
             </select>
+            {errors.gender && (
+              <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ethnicity
+              Race <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register('race')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+            >
+              <option value="" disabled>Select race...</option>
+              {RACE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {errors.race && (
+              <p className="text-red-500 text-sm mt-1">{errors.race.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ethnicity <span className="text-red-500">*</span>
             </label>
             <select
               {...register('ethnicity')}
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             >
-              <option value="">Select ethnicity...</option>
+              <option value="" disabled>Select ethnicity...</option>
               {ETHNICITY_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
             </select>
+            {errors.ethnicity && (
+              <p className="text-red-500 text-sm mt-1">{errors.ethnicity.message}</p>
+            )}
           </div>
 
           <div>
