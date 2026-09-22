@@ -529,6 +529,10 @@ export default async function DashboardPage({
             exit_date: p.exit_date,
             exit_destination: p.exit_destination,
             exit_notes: p.exit_notes,
+            phone_number: p.phone_number,
+            income_amount: p.income_amount,
+            how_came_to_vista: p.how_came_to_vista,
+            time_in_vista: p.time_in_vista,
           }))}
           allEncounters={allEncounters.map(e => ({
             id: e.id,
@@ -561,6 +565,8 @@ export default async function DashboardPage({
             case_management_notes: e.case_management_notes,
             support_services: e.support_services || [],
             service_types: e.service_types || [],
+            placement_detox_name: e.placement_detox_name,
+            naloxone_distributed: e.naloxone_distributed,
           }))}
           filteredPersons={filteredPersons.map(p => ({
             id: p.id,

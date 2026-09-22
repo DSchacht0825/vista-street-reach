@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { computeDashboardStats } from '@/lib/dashboardStats'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import MetricsGrid from '@/components/MetricsGrid'
@@ -33,6 +33,10 @@ interface Person {
   exit_date?: string | null
   exit_destination?: string | null
   exit_notes?: string | null
+  phone_number?: string | null
+  income_amount?: number | null
+  how_came_to_vista?: string | null
+  time_in_vista?: string | null
 }
 
 interface Encounter {
@@ -66,6 +70,8 @@ interface Encounter {
   case_management_notes?: string | null
   support_services?: string[]
   service_types?: string[]
+  placement_detox_name?: string | null
+  naloxone_distributed?: boolean
 }
 
 interface StatusChange {
@@ -175,25 +181,44 @@ interface DashboardClientProps {
   personsWithExits: ExitedPerson[]
 }
 
+type DashboardView = Pick<
+  DashboardClientProps,
+  | 'dateRangeText'
+  | 'metrics'
+  | 'demographics'
+  | 'serviceTypes'
+  | 'serviceTypeBreakdown'
+  | 'matByProvider'
+  | 'detoxByProvider'
+  | 'placementsByLocation'
+  | 'detoxPlacementDetails'
+  | 'howCameToVistaBreakdown'
+  | 'timeInVistaBreakdown'
+  | 'locations'
+  | 'filteredPersons'
+  | 'filteredEncounters'
+  | 'personsWithExits'
+>
+
 export default function DashboardClient({
   initialStartDate,
   initialEndDate,
-  dateRangeText,
-  metrics,
-  demographics,
-  serviceTypes,
-  serviceTypeBreakdown,
-  matByProvider,
-  detoxByProvider,
-  placementsByLocation,
-  detoxPlacementDetails,
-  howCameToVistaBreakdown,
-  timeInVistaBreakdown,
-  locations,
+  dateRangeText: serverDateRangeText,
+  metrics: serverMetrics,
+  demographics: serverDemographics,
+  serviceTypes: serverServiceTypes,
+  serviceTypeBreakdown: serverServiceTypeBreakdown,
+  matByProvider: serverMatByProvider,
+  detoxByProvider: serverDetoxByProvider,
+  placementsByLocation: serverPlacementsByLocation,
+  detoxPlacementDetails: serverDetoxPlacementDetails,
+  howCameToVistaBreakdown: serverHowCameToVistaBreakdown,
+  timeInVistaBreakdown: serverTimeInVistaBreakdown,
+  locations: serverLocations,
   allPersons,
   allEncounters,
-  filteredPersons,
-  filteredEncounters,
+  filteredPersons: serverFilteredPersons,
+  filteredEncounters: serverFilteredEncounters,
   statusChanges,
   activeClients,
   inactiveClients,
@@ -201,14 +226,84 @@ export default function DashboardClient({
   exitedClients,
   totalContacts,
   recentlyContacted,
-  personsWithExits,
+  personsWithExits: serverPersonsWithExits,
 }: DashboardClientProps) {
-  const router = useRouter()
   const [startDate, setStartDate] = useState(initialStartDate)
   const [endDate, setEndDate] = useState(initialEndDate)
+  const [appliedStart, setAppliedStart] = useState(initialStartDate)
+  const [appliedEnd, setAppliedEnd] = useState(initialEndDate)
   const [showReportBuilder, setShowReportBuilder] = useState(false)
   const [filterError, setFilterError] = useState('')
-  const [isPending, startTransition] = useTransition()
+
+  // If the server hands us a different range (full page load / navigation), follow it
+  useEffect(() => {
+    setStartDate(initialStartDate)
+    setEndDate(initialEndDate)
+    setAppliedStart(initialStartDate)
+    setAppliedEnd(initialEndDate)
+  }, [initialStartDate, initialEndDate])
+
+  // The date filter is computed here in the browser from the full data set,
+  // so changing the range updates every number instantly with no server round trip.
+  const view: DashboardView = useMemo(() => {
+    if (appliedStart === initialStartDate && appliedEnd === initialEndDate) {
+      return {
+        dateRangeText: serverDateRangeText,
+        metrics: serverMetrics,
+        demographics: serverDemographics,
+        serviceTypes: serverServiceTypes,
+        serviceTypeBreakdown: serverServiceTypeBreakdown,
+        matByProvider: serverMatByProvider,
+        detoxByProvider: serverDetoxByProvider,
+        placementsByLocation: serverPlacementsByLocation,
+        detoxPlacementDetails: serverDetoxPlacementDetails,
+        howCameToVistaBreakdown: serverHowCameToVistaBreakdown,
+        timeInVistaBreakdown: serverTimeInVistaBreakdown,
+        locations: serverLocations,
+        filteredPersons: serverFilteredPersons,
+        filteredEncounters: serverFilteredEncounters,
+        personsWithExits: serverPersonsWithExits,
+      }
+    }
+    return computeDashboardStats(allPersons, allEncounters, appliedStart, appliedEnd)
+  }, [
+    appliedStart, appliedEnd, initialStartDate, initialEndDate, allPersons, allEncounters,
+    serverDateRangeText, serverMetrics, serverDemographics, serverServiceTypes,
+    serverServiceTypeBreakdown, serverMatByProvider, serverDetoxByProvider,
+    serverPlacementsByLocation, serverDetoxPlacementDetails, serverHowCameToVistaBreakdown,
+    serverTimeInVistaBreakdown, serverLocations, serverFilteredPersons,
+    serverFilteredEncounters, serverPersonsWithExits,
+  ])
+  const {
+    dateRangeText,
+    metrics,
+    demographics,
+    serviceTypes,
+    serviceTypeBreakdown,
+    matByProvider,
+    detoxByProvider,
+    placementsByLocation,
+    detoxPlacementDetails,
+    howCameToVistaBreakdown,
+    timeInVistaBreakdown,
+    locations,
+    filteredPersons,
+    filteredEncounters,
+    personsWithExits,
+  } = view
+
+  // Keep the address bar shareable/refreshable without triggering a server fetch
+  const updateUrl = (start: string, end: string) => {
+    const params = new URLSearchParams()
+    if (start) params.set('start_date', start)
+    if (end) params.set('end_date', end)
+    const query = params.toString()
+    try {
+      window.history.replaceState(window.history.state, '', query ? `/dashboard?${query}` : '/dashboard')
+    } catch {
+      // URL update is cosmetic; the filter has already been applied
+    }
+  }
 
   const handleApplyFilter = () => {
     if (startDate && endDate && startDate > endDate) {
@@ -216,22 +311,18 @@ export default function DashboardClient({
       return
     }
     setFilterError('')
-    const params = new URLSearchParams()
-    if (startDate) params.set('start_date', startDate)
-    if (endDate) params.set('end_date', endDate)
-    const query = params.toString()
-    startTransition(() => {
-      router.push(query ? `/dashboard?${query}` : '/dashboard')
-    })
+    setAppliedStart(startDate)
+    setAppliedEnd(endDate)
+    updateUrl(startDate, endDate)
   }
 
   const handleClearFilter = () => {
     setStartDate('')
     setEndDate('')
     setFilterError('')
-    startTransition(() => {
-      router.push('/dashboard')
-    })
+    setAppliedStart('')
+    setAppliedEnd('')
+    updateUrl('', '')
   }
 
   const avgContacts = allPersons.length > 0
@@ -267,16 +358,14 @@ export default function DashboardClient({
           </div>
           <button
             onClick={handleApplyFilter}
-            disabled={isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-60 disabled:cursor-wait"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            {isPending ? 'Applying…' : 'Apply Filter'}
+            Apply Filter
           </button>
-          {(initialStartDate || initialEndDate) && (
+          {(appliedStart || appliedEnd) && (
             <button
               onClick={handleClearFilter}
-              disabled={isPending}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-60 disabled:cursor-wait"
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
             >
               Clear
             </button>
@@ -777,7 +866,7 @@ export default function DashboardClient({
           Service Interaction Heat Map
           {dateRangeText && <span className="text-sm font-normal text-gray-500 ml-2">({locations.length} locations)</span>}
         </h3>
-        <EncounterHeatMap key={`map-${initialStartDate}-${initialEndDate}`} locations={locations} />
+        <EncounterHeatMap key={`map-${appliedStart}-${appliedEnd}`} locations={locations} />
       </div>
 
       {/* Recently Contacted & Program Exits Lists */}
