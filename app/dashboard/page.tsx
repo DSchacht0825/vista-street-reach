@@ -80,15 +80,31 @@ export default async function DashboardPage({
     if (from > 100000) break
   }
 
-  // Fetch status changes for exits/returns
+  // Fetch all status changes with pagination to bypass the 1000-row limit.
+  // This was previously a single unpaginated query - Supabase silently caps
+  // that at 1000 rows, and since it was ordered newest-first, the missing
+  // rows were always the OLDEST exit/return records (undercounting anything
+  // that looks back further than the most recent 1000 status changes).
   let statusChangesData: Record<string, unknown>[] = []
-  const { data: statusData } = await supabase
-    .from('status_changes')
-    .select('*')
-    .order('change_date', { ascending: false })
+  from = 0
 
-  if (statusData) {
-    statusChangesData = statusData
+  while (true) {
+    const { data, error } = await supabase
+      .from('status_changes')
+      .select('*')
+      .order('change_date', { ascending: false })
+      .range(from, from + pageSize - 1)
+
+    if (error) {
+      console.error('Status changes fetch error:', error)
+      break
+    }
+
+    if (!data || data.length === 0) break
+    statusChangesData = statusChangesData.concat(data)
+    from += pageSize
+
+    if (from > 50000) break
   }
 
   // Type definitions

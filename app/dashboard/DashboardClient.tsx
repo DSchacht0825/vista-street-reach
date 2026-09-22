@@ -8,6 +8,7 @@ import MetricsGrid from '@/components/MetricsGrid'
 import EncounterHeatMap from '@/components/EncounterHeatMap'
 import CustomReportBuilder from '@/components/CustomReportBuilder'
 import ProgramExitsSection from '@/components/ProgramExitsSection'
+import MonthlyFlowCard from '@/components/MonthlyFlowCard'
 import ExportButton from '@/components/ExportButton'
 
 interface Person {
@@ -572,6 +573,9 @@ export default function DashboardClient({
           </div>
         )}
       </div>
+
+      {/* By-Name List Monthly Flow */}
+      <MonthlyFlowCard allPersons={allPersons} allEncounters={allEncounters} statusChanges={statusChanges} />
 
       {/* Referral Breakdown */}
       {(Object.keys(matByProvider).length > 0 || Object.keys(detoxByProvider).length > 0) && (
