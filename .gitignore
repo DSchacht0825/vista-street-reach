@@ -42,3 +42,4 @@ public/*.xlsx
 # Local-only: PII backups and Supabase CLI cache
 scripts/gender-backup-*.json
 supabase/.temp/
+scripts/placements-backup-*.json

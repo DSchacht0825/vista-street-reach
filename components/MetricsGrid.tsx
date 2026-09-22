@@ -1,6 +1,7 @@
 'use client'
 
 import MetricCard from './MetricCard'
+import { getPlacementLabel } from '@/lib/dashboardStats'
 
 interface Person {
   id: string
@@ -32,6 +33,7 @@ interface Encounter {
   transportation_provided: boolean
   placement_made?: boolean
   placement_location?: string | null
+  placement_location_other?: string | null
   naloxone_distributed?: boolean
 }
 
@@ -135,13 +137,13 @@ export default function MetricsGrid({ metrics, persons, encounters, demographics
       id: e.id || e.person_id + e.service_date,
       name: persons.find(p => p.id === e.person_id)?.first_name + ' ' + persons.find(p => p.id === e.person_id)?.last_name || 'Unknown',
       date: new Date(e.service_date).toLocaleDateString(),
-      details: e.placement_location || 'Location not specified',
+      details: getPlacementLabel(e) === 'Unknown' ? 'Location not specified' : getPlacementLabel(e),
     }))
 
   // Placement breakdown by location
   const placementBreakdown: Record<string, number> = {}
   encounters.filter(e => e.placement_made).forEach(e => {
-    const location = e.placement_location || 'Unknown'
+    const location = getPlacementLabel(e)
     placementBreakdown[location] = (placementBreakdown[location] || 0) + 1
   })
 

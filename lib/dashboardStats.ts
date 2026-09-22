@@ -45,6 +45,16 @@ export interface StatsEncounter {
   service_types?: string[] | null
 }
 
+// Label for where a placement happened: the typed label when the location is "Other"
+export function getPlacementLabel(e: {
+  placement_location?: string | null
+  placement_location_other?: string | null
+}): string {
+  const other = e.placement_location_other?.trim()
+  if (e.placement_location === 'Other') return other || 'Other'
+  return e.placement_location || other || 'Unknown'
+}
+
 const pacificParts = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/Los_Angeles',
   year: 'numeric',
@@ -192,7 +202,7 @@ export function computeDashboardStats<P extends StatsPerson, E extends StatsEnco
       detoxByProvider[e.detox_provider] = (detoxByProvider[e.detox_provider] || 0) + 1
     }
     if (e.placement_made) {
-      const location = e.placement_location || e.placement_location_other || 'Unknown'
+      const location = getPlacementLabel(e)
       placementsByLocation[location] = (placementsByLocation[location] || 0) + 1
     }
     if (Array.isArray(e.service_types)) {

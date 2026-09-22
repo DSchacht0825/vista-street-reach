@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import LogoutButton from '@/components/LogoutButton'
 import DuplicateManagerWrapper from '@/components/DuplicateManagerWrapper'
 import DashboardClient from './DashboardClient'
+import { getPlacementLabel } from '@/lib/dashboardStats'
 
 // Disable caching for this page - always fetch fresh data
 export const dynamic = 'force-dynamic'
@@ -395,7 +396,7 @@ export default async function DashboardPage({
   // Placements breakdown
   const placementsByLocation: Record<string, number> = {}
   filteredEncounters.filter(e => e.placement_made).forEach(e => {
-    const location = e.placement_location || e.placement_location_other || 'Unknown'
+    const location = getPlacementLabel(e)
     placementsByLocation[location] = (placementsByLocation[location] || 0) + 1
   })
 
