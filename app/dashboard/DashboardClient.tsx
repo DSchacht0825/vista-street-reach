@@ -737,16 +737,34 @@ export default function DashboardClient({
               </svg>
               Interaction Types per Encounter
             </h4>
+            <p className="text-sm text-gray-500 mb-1">
+              A single interaction can carry more than one type (e.g. a case management
+              visit that also included transportation), so the counts below add up to more
+              than the total interaction count.
+            </p>
             <p className="text-sm text-gray-500 mb-4">
-              Multiple interaction types can be logged per encounter
+              What does reconcile to {metrics.totalInteractions.toLocaleString()} total interactions:{' '}
+              <span className="font-medium text-gray-700">
+                {(metrics.totalInteractions - (serviceTypeBreakdown['Not categorized'] || 0)).toLocaleString()}
+              </span>{' '}
+              have at least one type recorded, and{' '}
+              <span className="font-medium text-gray-700">
+                {(serviceTypeBreakdown['Not categorized'] || 0).toLocaleString()}
+              </span>{' '}
+              are &quot;Not categorized.&quot;
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {Object.entries(serviceTypeBreakdown)
                 .sort(([, a], [, b]) => b - a)
                 .map(([type, count]) => (
-                  <div key={type} className="bg-indigo-50 px-4 py-3 rounded-lg">
+                  <div
+                    key={type}
+                    className={`px-4 py-3 rounded-lg ${type === 'Not categorized' ? 'bg-gray-100' : 'bg-indigo-50'}`}
+                  >
                     <span className="text-gray-700 text-sm">{type}</span>
-                    <span className="float-right font-bold text-indigo-600">{count}</span>
+                    <span className={`float-right font-bold ${type === 'Not categorized' ? 'text-gray-500' : 'text-indigo-600'}`}>
+                      {count}
+                    </span>
                   </div>
                 ))}
             </div>
